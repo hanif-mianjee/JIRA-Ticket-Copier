@@ -1,0 +1,63 @@
+# 🔧 Plan for the Extension
+We are building a Chrome extension that integrates with JIRA web pages. It should:
+1. Detect when a user is on a JIRA ticket page.
+2. Extract the ticket ID, title, and status from the DOM.
+3. Provide a simple UI element (e.g., button or context menu) to copy that data to clipboard in the following format:
+   AB-1234: In Progress - Sample ticket title here
+4. Package and prepare the extension for Chrome Web Store submission.
+
+# 📋 Requirements
+- Works with JIRA cloud interface (URL pattern: https://*.atlassian.net/browse/*)
+- Button appears intuitively on the JIRA ticket page
+- Clicking the button copies a string formatted like: AB-1234: In Progress - Sample title
+- Must use clean JavaScript/TypeScript, HTML, and manifest v3
+- Styling should blend with JIRA UI
+- Modular, well-documented code
+- Include unit tests for utility functions (e.g., DOM extraction, format generation)
+- Provide a dev/test environment setup guide
+- Prepare ZIP for Chrome Web Store upload
+
+# ✅ Current State of Development
+
+## Progress as of July 17, 2025
+## Unit Test Results (July 17, 2025)
+
+All utility function tests passed:
+- `formatJiraString` formats correctly
+- `extractJiraTicketInfo` returns empty strings if elements not found
+- `extractJiraTicketInfo` extracts info from DOM
+
+Jest configured with Babel for ES module syntax. Test environment: jsdom.
+- Project initialized with manifest v3 and modular file structure:
+  - `manifest.json` (extension config)
+  - `src/content.js` (injects button, handles copy)
+  - `src/background.js` (service worker, placeholder)
+  - `src/utils.js` (DOM extraction, formatting)
+  - `src/utils.test.js` (unit tests for utils)
+  - `src/icons/` (icon folder, add icons before packaging)
+  - `README.md` (setup, dev/test, packaging guide)
+- DOM selectors for JIRA cloud interface identified and used for ticket ID, status, and title extraction.
+- Button is injected into JIRA ticket header, styled to blend with JIRA UI, and copies formatted string to clipboard.
+- MutationObserver ensures button persists on SPA navigation.
+- Unit tests for utility functions created (Jest, jsdom).
+- Markdown and code linting errors resolved.
+
+# 🔁 Reusable Prompt for AI Agent Continuation
+## What’s Next (TODO)
+
+1. Test extension in Chrome on multiple JIRA ticket pages for robustness.
+2. Refine UI/UX (e.g., accessibility, error handling, button placement).
+3. Add more documentation/comments to code if needed.
+4. Prepare ZIP for Chrome Web Store (exclude test files, include icons).
+5. Update this file with test results and packaging steps.
+
+You are continuing the development of a Chrome extension based on the plan in this file. Your tasks are:
+1. Read all instructions and understand the current state.
+2. Build the required components based on priority.
+3. After completing a step, update the "Current State of Development" section with details.
+4. Always document new files, code functions, and design decisions.
+5. Ensure all required features are working and tested.
+6. If you finish a major milestone, repackage the extension and update instructions for the next milestone.
+7. You may use your own judgment and creativity to improve UX or code quality if the results remain aligned with the goals.
+8. After each round of work, append a new section in this file titled "What’s Next" with a TODO list for the next agent/developer.
+

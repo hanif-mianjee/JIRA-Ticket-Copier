@@ -1,0 +1,20 @@
+{
+  "name": "jira-ticket-copier",
+  "version": "0.1.0",
+  "description": "Copy JIRA ticket info to clipboard from ticket pages.",
+  "main": "src/content.js",
+  "scripts": {
+    "test": "jest"
+  },
+  "devDependencies": {
+    "@babel/preset-env": "^7.0.0",
+    "jest": "^29.0.0",
+    "jest-environment-jsdom": "^29.7.0"
+  },
+  "jest": {
+    "testEnvironment": "jsdom",
+    "transform": {
+      ".*\\.js$": "babel-jest"
+    }
+  }
+}
