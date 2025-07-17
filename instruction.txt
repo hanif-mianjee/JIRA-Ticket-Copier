@@ -21,7 +21,12 @@ We are building a Chrome extension that integrates with JIRA web pages. It shoul
 
 ## Progress as of July 17, 2025
 ## Unit Test Results (July 17, 2025)
+## UX & Documentation Improvements (July 17, 2025)
 
+- Button now includes ARIA attributes and tabindex for accessibility.
+- Improved error handling: button shows error if ticket info is missing or copy fails.
+- Button placement refined: appears after ticket ID for better UX.
+- All main functions in content.js are now documented with JSDoc comments for maintainability.
 All utility function tests passed:
 - `formatJiraString` formats correctly
 - `extractJiraTicketInfo` returns empty strings if elements not found

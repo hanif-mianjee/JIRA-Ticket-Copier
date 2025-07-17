@@ -1,6 +1,11 @@
 // Content script for JIRA Ticket Copier
 // Injects a button into JIRA ticket pages to copy ticket info to clipboard
 
+/**
+ * Extracts JIRA ticket info (ID, status, title) from the DOM.
+ * @returns {Object} { ticketId, status, title }
+ */
+
 (function () {
   // Utility to extract ticket info from DOM
   function extractJiraTicketInfo() {
@@ -20,12 +25,18 @@
     return { ticketId, status, title };
   }
 
-  // Format string for clipboard
+  /**
+   * Formats the extracted ticket info for clipboard copying.
+   * @param {Object} param0
+   * @returns {string}
+   */
   function formatJiraString({ ticketId, status, title }) {
     return `${ticketId}: ${status} - ${title}`;
   }
 
-  // Inject button into JIRA UI
+  /**
+   * Injects the copy button into the JIRA UI, with accessibility and error handling.
+   */
   function injectCopyButton() {
     if (document.getElementById("jira-ticket-copy-btn")) return; // Prevent duplicates
     const header = document.querySelector(
@@ -35,6 +46,8 @@
     const btn = document.createElement("button");
     btn.id = "jira-ticket-copy-btn";
     btn.textContent = "Copy Ticket Info";
+    btn.setAttribute("aria-label", "Copy JIRA ticket info to clipboard");
+    btn.setAttribute("tabindex", "0");
     btn.style.marginLeft = "8px";
     btn.style.background = "#0052CC";
     btn.style.color = "#fff";
@@ -50,17 +63,46 @@
     btn.onclick = () => {
       const info = extractJiraTicketInfo();
       const formatted = formatJiraString(info);
-      navigator.clipboard.writeText(formatted).then(() => {
-        btn.textContent = "Copied!";
+      if (!info.ticketId || !info.status || !info.title) {
+        btn.textContent = "Ticket info not found";
+        btn.style.background = "#FF5630";
         setTimeout(() => {
           btn.textContent = "Copy Ticket Info";
-        }, 1200);
-      });
+          btn.style.background = "#0052CC";
+        }, 1800);
+        return;
+      }
+      navigator.clipboard
+        .writeText(formatted)
+        .then(() => {
+          btn.textContent = "Copied!";
+          setTimeout(() => {
+            btn.textContent = "Copy Ticket Info";
+          }, 1200);
+        })
+        .catch(() => {
+          btn.textContent = "Copy failed";
+          btn.style.background = "#FF5630";
+          setTimeout(() => {
+            btn.textContent = "Copy Ticket Info";
+            btn.style.background = "#0052CC";
+          }, 1800);
+        });
     };
-    header.appendChild(btn);
+    // Place button after ticket ID if possible for better UX
+    const idEl = document.querySelector(
+      '[data-test-id="issue.views.issue-base.issue-header.issue-key"]'
+    );
+    if (idEl && idEl.parentNode) {
+      idEl.parentNode.insertBefore(btn, idEl.nextSibling);
+    } else {
+      header.appendChild(btn);
+    }
   }
 
-  // Run on page load and on history changes (JIRA is SPA)
+  /**
+   * Observes DOM mutations to ensure button persists on SPA navigation.
+   */
   function observeJiraPage() {
     injectCopyButton();
     const observer = new MutationObserver(() => {
