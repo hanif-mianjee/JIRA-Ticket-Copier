@@ -18,6 +18,25 @@ We are building a Chrome extension that integrates with JIRA web pages. It shoul
 - Prepare ZIP for Chrome Web Store upload
 
 # ✅ Current State of Development
+## Progress Update (July 17, 2025)
+- Extension UI now features a grouped button and dropdown for status selection, styled to match JIRA.
+- Dropdown allows selection from a predefined status list or uses status from DOM by default.
+- Copy action is triggered on either button click or dropdown selection.
+- Accessibility and error handling improved; focus outlines removed for cleaner look.
+- All utility function tests pass; code linted and documented.
+- Ready for final packaging and Chrome Web Store submission.
+
+## Milestones
+- ✅ Initial extension scaffold and manifest v3 setup
+- ✅ DOM selectors for JIRA ticket info extraction
+- ✅ Button injection and styling to match JIRA UI
+- ✅ MutationObserver for SPA navigation support
+- ✅ Unit tests for utility functions (Jest, jsdom)
+- ✅ Icon branding and packaging instructions
+- ✅ Dropdown for status selection (grouped UI, copy on select)
+- ✅ Accessibility and error handling improvements
+- ⏳ Final packaging, ZIP cleanup, and Chrome Web Store submission
+- ⏳ Post-submission feedback and next feature planning
 
 ## Progress as of July 17, 2025
 ## Unit Test Results (July 17, 2025)
@@ -63,11 +82,10 @@ After submitting to the Chrome Web Store:
 1. Test extension in Chrome on multiple JIRA ticket pages for robustness.
 2. Refine UI/UX (e.g., accessibility, error handling, button placement).
 3. Add more documentation/comments to code if needed.
-4. Add dropdown to "Copy Ticket Info" button to select status from a predefined list. Default: use status from DOM. If user selects a status, use that in the copied string.
-5. Follow packaging_instructions.txt to prepare ZIP for Chrome Web Store (exclude test files, include icons).
-6. ZIP archive `jira-ticket-copier.zip` cleaned: all unnecessary files (`.DS_Store`, `src/utils.test.js`) removed. Ready for Chrome Web Store submission.
-7. Update this file with test results and packaging steps after submission.
-8. After submission, document feedback and next steps for future improvements or bug fixes.
+4. Follow packaging_instructions.txt to prepare ZIP for Chrome Web Store (exclude test files, include icons).
+5. ZIP archive `jira-ticket-copier.zip` cleaned: all unnecessary files (`.DS_Store`, `src/utils.test.js`) removed. Ready for Chrome Web Store submission.
+6. Update this file with test results and packaging steps after submission.
+7. After submission, document feedback and next steps for future improvements or bug fixes.
 
 # 🔁 Reusable Prompt for AI Agent Continuation
 You are continuing the development of a Chrome extension based on the plan in this file. Your tasks are:
