@@ -2,50 +2,64 @@
 
 ## Overview
 
-This extension adds a button to JIRA ticket pages (cloud interface) that copies the ticket ID, status, and title to your clipboard in the format:
-
-`AB-1234: In Progress - Sample ticket title here`
+Copy JIRA ticket info (ID, status, title) to clipboard from ticket pages. Button blends with JIRA UI and works on JIRA cloud (`https://*.atlassian.net/browse/*`).
 
 ## Features
 
-- Detects JIRA ticket pages (`https://*.atlassian.net/browse/*`)
-- Extracts ticket ID, status, and title from the DOM
-- Injects a button into the JIRA UI to copy info to clipboard
+- Detects JIRA ticket pages
+- Extracts ticket ID, status, and title from DOM
+- Button to copy info in format: `AB-1234: In Progress - Sample ticket title here`
 - Clean, modular code (JavaScript, manifest v3)
-- Unit tests for utility functions
-- Styling blends with JIRA UI
+- Unit tests for utility functions (Jest)
+- Dev/prod ready structure
 
-## Dev/Test Setup
+## Development Environment Setup
 
-1. Clone this repo.
+### Prerequisites
 
-2. Run unit tests:
+- Node.js v23.1.0
+- npm v10.9.0
 
-   - Install dependencies: `npm install jest @babel/preset-env --save-dev`
-   - Add to `package.json`:
+### Installation
 
-     ```json
-     "scripts": {
-       "test": "jest"
-     },
-     "jest": {
-       "testEnvironment": "jsdom",
-       "transform": {}
-     }
-     ```
+```sh
+npm install
+```
 
-   - Run: `npm test`
+## Running Unit Tests
 
-3. Load extension in Chrome:
-   - Go to `chrome://extensions`
-   - Enable Developer Mode
-   - Click "Load unpacked" and select this folder
-   - Open a JIRA ticket page to test
+```sh
+npm test
+```
+
+Tests use Jest and jsdom. See `src/utils.test.js` for coverage.
+
+## Chrome Extension Development
+
+1. Open `chrome://extensions` in Chrome.
+2. Enable Developer Mode.
+3. Click "Load unpacked" and select this folder.
+4. Open a JIRA ticket page to test the button.
+5. Use DevTools Console for debug output.
 
 ## Packaging for Chrome Web Store
 
-- Zip the entire extension folder (excluding test files)
-- Submit to Chrome Web Store
+1. Clean up: remove test files, `.DS_Store`, etc.
+2. Run:
+
+   ```sh
+   zip -r jira-ticket-copier.zip manifest.json src/ README.md packaging_instructions.txt
+   zip -d jira-ticket-copier.zip src/utils.test.js src/.DS_Store src/icons/.DS_Store
+   ```
+
+3. Submit ZIP to Chrome Web Store.
+
+## Publishing
+
+1. Go to [Chrome Web Store Developer Dashboard](https://chrome.google.com/webstore/devconsole)
+2. Upload ZIP, fill out details, add icons/screenshots.
+3. Submit for review.
+4. Record feedback and update code as needed.
 
 ## File Structure
 
@@ -53,8 +67,13 @@ This extension adds a button to JIRA ticket pages (cloud interface) that copies 
 - `src/content.js` — Content script (injects button, handles copy)
 - `src/background.js` — Background script (required for v3)
 - `src/utils.js` — Utility functions (DOM extraction, formatting)
-- `src/utils.test.js` — Unit tests
 - `src/icons/` — Extension icons
+- `README.md` — Dev/test/packaging guide
+- `.gitignore` — Ignore dev/prod artifacts
+
+## Contributing
+
+PRs and issues welcome! Please document code and update tests.
 
 ## License
 
