@@ -54,8 +54,9 @@ Jest configured with Babel for ES module syntax. Test environment: jsdom.
 2. Refine UI/UX (e.g., accessibility, error handling, button placement).
 3. Add more documentation/comments to code if needed.
 4. Follow packaging_instructions.txt to prepare ZIP for Chrome Web Store (exclude test files, include icons).
-5. Update this file with test results and packaging steps.
-6. After submission, document feedback and next steps for future improvements or bug fixes.
+5. ZIP archive `jira-ticket-copier.zip` created, ready for Chrome Web Store submission. Review contents to ensure no test files or unnecessary system files (e.g., .DS_Store) are included.
+6. Update this file with test results and packaging steps after submission.
+7. After submission, document feedback and next steps for future improvements or bug fixes.
 
 You are continuing the development of a Chrome extension based on the plan in this file. Your tasks are:
 1. Read all instructions and understand the current state.
