@@ -22,7 +22,10 @@ We are building a Chrome extension that integrates with JIRA web pages. It shoul
 ## Progress as of July 17, 2025
 ## Unit Test Results (July 17, 2025)
 ## UX & Documentation Improvements (July 17, 2025)
+## Branding Update (July 17, 2025)
 
+- Replaced previous icons with a universally recognizable clipboard/ticket design in 16x16, 48x48, and 128x128 PNG formats using macOS Preview.
+- Manifest and packaging instructions now reference the new icons.
 - Button now includes ARIA attributes and tabindex for accessibility.
 - Improved error handling: button shows error if ticket info is missing or copy fails.
 - Button placement refined: appears after ticket ID for better UX.
@@ -47,7 +50,6 @@ Jest configured with Babel for ES module syntax. Test environment: jsdom.
 - Unit tests for utility functions created (Jest, jsdom).
 - Markdown and code linting errors resolved.
 
-# 🔁 Reusable Prompt for AI Agent Continuation
 ## Post-Submission (TODO)
 
 After submitting to the Chrome Web Store:
@@ -55,6 +57,7 @@ After submitting to the Chrome Web Store:
 - Note any bugs or user suggestions from initial usage.
 - Plan next improvements (e.g., context menu support, more robust DOM extraction, options page, localization).
 - Update this file with feedback and a new TODO list for the next agent/developer.
+
 ## What’s Next (TODO)
 
 1. Test extension in Chrome on multiple JIRA ticket pages for robustness.
@@ -65,6 +68,7 @@ After submitting to the Chrome Web Store:
 6. Update this file with test results and packaging steps after submission.
 7. After submission, document feedback and next steps for future improvements or bug fixes.
 
+# 🔁 Reusable Prompt for AI Agent Continuation
 You are continuing the development of a Chrome extension based on the plan in this file. Your tasks are:
 1. Read all instructions and understand the current state.
 2. Build the required components based on priority.
