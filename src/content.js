@@ -47,74 +47,163 @@ console.log("[JIRA Ticket Copier] Content script loaded");
       console.log("[JIRA Ticket Copier] Button already exists");
       return; // Prevent duplicates
     }
-    const header = document.querySelector(
-      '[data-testid="issue.views.issue-base.foundation.summary.heading"]'
+    const jiraStatusWrapper = document.querySelector(
+      '[data-testid="issue.views.issue-base.foundation.status.status-field-wrapper"]'
     );
-    if (!header) {
-      console.warn("[JIRA Ticket Copier] Header not found 1");
+    if (!jiraStatusWrapper) {
+      console.warn("[JIRA Ticket Copier] JIRA Status Wrapper not found");
       return;
     }
     // Dropdown for status selection
     const statusList = [
-      "To Do",
-      "In Progress",
+      //   "To Do",
+      //   "In Progress",
+      "Waiting for Input",
       "Analysis",
       "Analysis/Comment added",
-      "Done",
+      //   "Done",
       "Blocked",
       "Blocked/Comment added",
       "Blocked/Waiting for Input",
       "In Review",
-      "In Testing",
+      //   "In Testing",
       "PR Raised",
-      "In QA",
-      "In UAT",
-      "Selected for Development",
+      "Review suggestions applied",
+      //   "In QA",
+      //   "In UAT",
+      //   "Selected for Development",
     ];
     let selectedStatus = null;
-    const dropdown = document.createElement("select");
-    dropdown.id = "jira-ticket-status-dropdown";
-    dropdown.style.marginLeft = "8px";
-    dropdown.style.padding = "2px 6px";
-    dropdown.style.borderRadius = "3px";
-    dropdown.style.border = "1px solid #ccc";
-    dropdown.style.fontSize = "13px";
-    dropdown.style.background = "#fff";
-    dropdown.style.color = "#333";
-    const defaultOption = document.createElement("option");
-    defaultOption.value = "";
-    defaultOption.textContent = "(Status from page)";
-    dropdown.appendChild(defaultOption);
-    statusList.forEach((status) => {
-      const opt = document.createElement("option");
-      opt.value = status;
-      opt.textContent = status;
-      dropdown.appendChild(opt);
-    });
-    dropdown.onchange = () => {
-      selectedStatus = dropdown.value || null;
-    };
+    // Group button and dropdown visually
+    const groupWrapper = document.createElement("div");
+    groupWrapper.id = "jira-ticket-copier-group";
+    // groupWrapper.style.display = "inline-flex";
+    // groupWrapper.style.alignItems = "center";
+    // groupWrapper.style.gap = "0px";
+    groupWrapper.style.marginLeft = "8px";
 
+    // Copy button (left)
     const btn = document.createElement("button");
     btn.id = "jira-ticket-copy-btn";
     btn.textContent = "Copy Ticket Info";
     btn.setAttribute("aria-label", "Copy JIRA ticket info to clipboard");
     btn.setAttribute("tabindex", "0");
-    btn.style.marginLeft = "8px";
-    btn.style.background = "#0052CC";
-    btn.style.color = "#fff";
+    btn.style.background = "#1558BC";
+    btn.style.color = "#BFC1C4";
     btn.style.border = "none";
-    btn.style.borderRadius = "3px";
+    btn.style.borderRadius = "3px 0 0 3px";
     btn.style.padding = "4px 10px";
     btn.style.cursor = "pointer";
     btn.style.fontSize = "14px";
     btn.style.boxShadow = "0 1px 2px rgba(0,0,0,0.08)";
     btn.style.transition = "background 0.2s";
+    btn.style.outline = "none";
     btn.onmouseenter = () => (btn.style.background = "#0065FF");
     btn.onmouseleave = () => (btn.style.background = "#0052CC");
-    btn.onclick = () => {
+    btn.onmousedown = () => (btn.style.outline = "none");
+    btn.onfocus = () => (btn.style.outline = "none");
+
+    // Custom HTML dropdown (right)
+    const dropdownWrapper = document.createElement("div");
+    dropdownWrapper.id = "jira-ticket-status-dropdown-wrapper";
+    dropdownWrapper.style.display = "inline-block";
+    dropdownWrapper.style.position = "relative";
+    dropdownWrapper.style.fontSize = "13px";
+
+    const dropdownBtn = document.createElement("button");
+    dropdownBtn.innerHTML = "<span>&#9660;</span>";
+    dropdownBtn.setAttribute("aria-label", "Select status");
+    dropdownBtn.style.background = "#1558BC";
+    dropdownBtn.style.color = "#BFC1C4";
+    dropdownBtn.style.border = "none";
+    dropdownBtn.style.borderRadius = "0 3px 3px 0";
+    dropdownBtn.style.padding = "4px 10px";
+    dropdownBtn.style.cursor = "pointer";
+    dropdownBtn.style.fontSize = "14px";
+    dropdownBtn.style.boxShadow = "0 1px 2px rgba(0,0,0,0.08)";
+    dropdownBtn.style.transition = "background 0.2s";
+    dropdownBtn.style.outline = "none";
+    dropdownBtn.onmouseenter = () => (dropdownBtn.style.background = "#1558BC");
+    dropdownBtn.onmouseleave = () => (dropdownBtn.style.background = "#0052CC");
+    dropdownBtn.onmousedown = () => (dropdownBtn.style.outline = "none");
+    dropdownBtn.onfocus = () => (dropdownBtn.style.outline = "none");
+
+    const dropdownMenu = document.createElement("div");
+    dropdownMenu.style.display = "none";
+    dropdownMenu.style.position = "absolute";
+    dropdownMenu.style.top = "110%";
+    dropdownMenu.style.right = "0";
+    dropdownMenu.style.background = "#fff";
+    dropdownMenu.style.border = "1px solid #ccc";
+    dropdownMenu.style.borderRadius = "3px";
+    dropdownMenu.style.boxShadow = "0 2px 8px rgba(0,0,0,0.12)";
+    dropdownMenu.style.zIndex = "9999999";
+    dropdownMenu.style.minWidth = "160px";
+
+    // Default option
+    const defaultItem = document.createElement("div");
+    defaultItem.textContent = "(Status from page)";
+    defaultItem.style.padding = "6px 12px";
+    defaultItem.style.cursor = "pointer";
+    defaultItem.style.background = "#fff";
+    defaultItem.style.color = "#333";
+    defaultItem.style.fontSize = "14px";
+    defaultItem.onmouseenter = () => (
+      (defaultItem.style.background = "#1558BC"),
+      (defaultItem.style.color = "#fff")
+    );
+    defaultItem.onmouseleave = () => (
+      (defaultItem.style.background = "#fff"),
+      (defaultItem.style.color = "#333")
+    );
+    defaultItem.onclick = () => {
+      selectedStatus = null;
+      dropdownMenu.style.display = "none";
+      triggerCopy();
+    };
+    dropdownMenu.appendChild(defaultItem);
+
+    statusList.forEach((status) => {
+      const item = document.createElement("div");
+      item.textContent = status;
+      item.style.padding = "6px 12px";
+      item.style.cursor = "pointer";
+      item.style.background = "#fff";
+      item.style.color = "#333";
+      item.style.fontSize = "14px";
+      item.onmouseenter = () => (
+        (item.style.background = "#1558BC"), (item.style.color = "#fff")
+      );
+      item.onmouseleave = () => (
+        (item.style.background = "#fff"), (item.style.color = "#333")
+      );
+      item.onclick = () => {
+        selectedStatus = status;
+        dropdownMenu.style.display = "none";
+        triggerCopy();
+      };
+      dropdownMenu.appendChild(item);
+    });
+
+    dropdownBtn.onclick = (e) => {
+      e.stopPropagation();
+      dropdownMenu.style.display =
+        dropdownMenu.style.display === "none" ? "block" : "none";
+    };
+
+    // Hide dropdown on outside click
+    document.addEventListener("click", () => {
+      dropdownMenu.style.display = "none";
+    });
+
+    dropdownWrapper.appendChild(dropdownBtn);
+    dropdownWrapper.appendChild(dropdownMenu);
+    groupWrapper.appendChild(btn);
+    groupWrapper.appendChild(dropdownWrapper);
+
+    // Copy logic as a function
+    function triggerCopy() {
       const info = extractJiraTicketInfo();
-      // Use selected status if chosen, else use DOM status
       const statusToUse = selectedStatus || info.status;
       const formatted = formatJiraString({
         ticketId: info.ticketId,
@@ -146,23 +235,25 @@ console.log("[JIRA Ticket Copier] Content script loaded");
             btn.style.background = "#0052CC";
           }, 1800);
         });
-    };
+    }
+
+    btn.onclick = triggerCopy;
+
+    // ...existing code...
     // Place dropdown and button after ticket ID if possible for better UX
     const idEl = document.querySelector(
-      '[data-testid="issue.views.issue-base.foundation.breadcrumbs.current-issue.item"]'
+      '[data-testid="issue.views.issue-base.foundation.breadcrumbs.breadcrumb-current-issue-container"]'
     );
     if (idEl && idEl.parentNode) {
       console.log(
         "[JIRA Ticket Copier] Ticket ID element found, inserting dropdown and button after it"
       );
-      idEl.parentNode.insertBefore(dropdown, idEl.nextSibling);
-      idEl.parentNode.insertBefore(btn, dropdown.nextSibling);
+      idEl.parentNode.appendChild(groupWrapper);
     } else {
       console.warn(
         "[JIRA Ticket Copier] Ticket ID element not found, appending dropdown and button to header"
       );
-      header.appendChild(dropdown);
-      header.appendChild(btn);
+      jiraStatusWrapper.parentNode.appendChild(groupWrapper);
     }
   }
 
