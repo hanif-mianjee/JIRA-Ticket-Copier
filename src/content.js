@@ -54,6 +54,47 @@ console.log("[JIRA Ticket Copier] Content script loaded");
       console.warn("[JIRA Ticket Copier] Header not found 1");
       return;
     }
+    // Dropdown for status selection
+    const statusList = [
+      "To Do",
+      "In Progress",
+      "Analysis",
+      "Analysis/Comment added",
+      "Done",
+      "Blocked",
+      "Blocked/Comment added",
+      "Blocked/Waiting for Input",
+      "In Review",
+      "In Testing",
+      "PR Raised",
+      "In QA",
+      "In UAT",
+      "Selected for Development",
+    ];
+    let selectedStatus = null;
+    const dropdown = document.createElement("select");
+    dropdown.id = "jira-ticket-status-dropdown";
+    dropdown.style.marginLeft = "8px";
+    dropdown.style.padding = "2px 6px";
+    dropdown.style.borderRadius = "3px";
+    dropdown.style.border = "1px solid #ccc";
+    dropdown.style.fontSize = "13px";
+    dropdown.style.background = "#fff";
+    dropdown.style.color = "#333";
+    const defaultOption = document.createElement("option");
+    defaultOption.value = "";
+    defaultOption.textContent = "(Status from page)";
+    dropdown.appendChild(defaultOption);
+    statusList.forEach((status) => {
+      const opt = document.createElement("option");
+      opt.value = status;
+      opt.textContent = status;
+      dropdown.appendChild(opt);
+    });
+    dropdown.onchange = () => {
+      selectedStatus = dropdown.value || null;
+    };
+
     const btn = document.createElement("button");
     btn.id = "jira-ticket-copy-btn";
     btn.textContent = "Copy Ticket Info";
@@ -73,8 +114,14 @@ console.log("[JIRA Ticket Copier] Content script loaded");
     btn.onmouseleave = () => (btn.style.background = "#0052CC");
     btn.onclick = () => {
       const info = extractJiraTicketInfo();
-      const formatted = formatJiraString(info);
-      if (!info.ticketId || !info.status || !info.title) {
+      // Use selected status if chosen, else use DOM status
+      const statusToUse = selectedStatus || info.status;
+      const formatted = formatJiraString({
+        ticketId: info.ticketId,
+        status: statusToUse,
+        title: info.title,
+      });
+      if (!info.ticketId || !statusToUse || !info.title) {
         btn.textContent = "Ticket info not found";
         btn.style.background = "#FF5630";
         setTimeout(() => {
@@ -100,19 +147,21 @@ console.log("[JIRA Ticket Copier] Content script loaded");
           }, 1800);
         });
     };
-    // Place button after ticket ID if possible for better UX
+    // Place dropdown and button after ticket ID if possible for better UX
     const idEl = document.querySelector(
       '[data-testid="issue.views.issue-base.foundation.breadcrumbs.current-issue.item"]'
     );
     if (idEl && idEl.parentNode) {
       console.log(
-        "[JIRA Ticket Copier] Ticket ID element found, inserting button after it"
+        "[JIRA Ticket Copier] Ticket ID element found, inserting dropdown and button after it"
       );
-      idEl.parentNode.insertBefore(btn, idEl.nextSibling);
+      idEl.parentNode.insertBefore(dropdown, idEl.nextSibling);
+      idEl.parentNode.insertBefore(btn, dropdown.nextSibling);
     } else {
       console.warn(
-        "[JIRA Ticket Copier] Ticket ID element not found, appending button to header"
+        "[JIRA Ticket Copier] Ticket ID element not found, appending dropdown and button to header"
       );
+      header.appendChild(dropdown);
       header.appendChild(btn);
     }
   }
