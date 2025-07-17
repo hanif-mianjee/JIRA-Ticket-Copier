@@ -48,6 +48,13 @@ Jest configured with Babel for ES module syntax. Test environment: jsdom.
 - Markdown and code linting errors resolved.
 
 # 🔁 Reusable Prompt for AI Agent Continuation
+## Post-Submission (TODO)
+
+After submitting to the Chrome Web Store:
+- Record reviewer feedback and any required changes.
+- Note any bugs or user suggestions from initial usage.
+- Plan next improvements (e.g., context menu support, more robust DOM extraction, options page, localization).
+- Update this file with feedback and a new TODO list for the next agent/developer.
 ## What’s Next (TODO)
 
 1. Test extension in Chrome on multiple JIRA ticket pages for robustness.

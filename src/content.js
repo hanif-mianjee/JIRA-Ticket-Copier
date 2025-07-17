@@ -1,3 +1,4 @@
+console.log("[JIRA Ticket Copier] Content script loaded");
 // Content script for JIRA Ticket Copier
 // Injects a button into JIRA ticket pages to copy ticket info to clipboard
 
@@ -11,14 +12,18 @@
   function extractJiraTicketInfo() {
     // Try to find ticket ID, status, and title using JIRA cloud DOM structure
     const idEl = document.querySelector(
-      '[data-test-id="issue.views.issue-base.issue-header.issue-key"]'
+      '[data-testid="issue.views.issue-base.foundation.breadcrumbs.current-issue.item"]'
     );
     const statusEl = document.querySelector(
-      '[data-test-id="issue.views.issue-base.status.status-field"]'
+      '[data-testid="issue-field-status.ui.status-view.status-button.status-button"]'
     );
     const titleEl = document.querySelector(
-      '[data-test-id="issue.views.issue-base.summary.heading"]'
+      '[data-testid="issue.views.issue-base.foundation.summary.heading"]'
     );
+    if (!idEl) console.warn("[JIRA Ticket Copier] Ticket ID element not found");
+    if (!statusEl)
+      console.warn("[JIRA Ticket Copier] Status element not found");
+    if (!titleEl) console.warn("[JIRA Ticket Copier] Title element not found");
     const ticketId = idEl ? idEl.textContent.trim() : "";
     const status = statusEl ? statusEl.textContent.trim() : "";
     const title = titleEl ? titleEl.textContent.trim() : "";
@@ -38,11 +43,17 @@
    * Injects the copy button into the JIRA UI, with accessibility and error handling.
    */
   function injectCopyButton() {
-    if (document.getElementById("jira-ticket-copy-btn")) return; // Prevent duplicates
+    if (document.getElementById("jira-ticket-copy-btn")) {
+      console.log("[JIRA Ticket Copier] Button already exists");
+      return; // Prevent duplicates
+    }
     const header = document.querySelector(
-      '[data-test-id="issue.views.issue-base.issue-header"]'
+      '[data-testid="issue.views.issue-base.foundation.summary.heading"]'
     );
-    if (!header) return;
+    if (!header) {
+      console.warn("[JIRA Ticket Copier] Header not found 1");
+      return;
+    }
     const btn = document.createElement("button");
     btn.id = "jira-ticket-copy-btn";
     btn.textContent = "Copy Ticket Info";
@@ -91,11 +102,17 @@
     };
     // Place button after ticket ID if possible for better UX
     const idEl = document.querySelector(
-      '[data-test-id="issue.views.issue-base.issue-header.issue-key"]'
+      '[data-testid="issue.views.issue-base.foundation.breadcrumbs.current-issue.item"]'
     );
     if (idEl && idEl.parentNode) {
+      console.log(
+        "[JIRA Ticket Copier] Ticket ID element found, inserting button after it"
+      );
       idEl.parentNode.insertBefore(btn, idEl.nextSibling);
     } else {
+      console.warn(
+        "[JIRA Ticket Copier] Ticket ID element not found, appending button to header"
+      );
       header.appendChild(btn);
     }
   }
