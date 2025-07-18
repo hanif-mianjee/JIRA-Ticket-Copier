@@ -8,7 +8,6 @@
     "build": "vite build && node copy-icons.mjs",
     "package": "npm run build && zip -r jira-ticket-copier.zip manifest.json dist/ README.md packaging_instructions.txt",
     "lint": "eslint src --ext .js",
-    "format": "prettier --write src",
     "test": "jest --env=jsdom src/*.test.js",
     "prepare": "husky install",
     "release": "standard-version",

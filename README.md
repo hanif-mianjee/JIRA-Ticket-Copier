@@ -44,11 +44,10 @@ npm install
 
 ## Build, Test, and Release Workflow
 
-### 1. Lint and Format Code
+### 1. Lint Code
 
 ```sh
 npm run lint      # Check code quality
-npm run format    # Auto-format code with Prettier
 ```
 
 ### 2. Run Unit Tests
@@ -143,7 +142,7 @@ npm run package
 
 ## Developer Checklist Before Release
 
-- [ ] Lint and format all code (`npm run lint` and `npm run format`)
+- [ ] Lint all code (`npm run lint`)
 - [ ] Run all unit tests and ensure 100% pass (`npm test`)
 - [ ] Validate the manifest and all referenced files (`npm run validate-manifest`)
 - [ ] Build the extension (`npm run build`)
