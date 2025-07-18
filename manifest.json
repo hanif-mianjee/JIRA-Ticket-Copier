@@ -5,13 +5,10 @@
   "description": "Copy JIRA ticket info (ID, status, title) to clipboard from ticket pages.",
   "permissions": ["scripting", "activeTab", "clipboardWrite"],
   "host_permissions": ["https://*.atlassian.net/browse/*"],
-  "background": {
-    "service_worker": "src/background.js"
-  },
   "content_scripts": [
     {
       "matches": ["https://*.atlassian.net/browse/*"],
-      "js": ["src/content.js"],
+      "js": ["dist/content.js"],
       "run_at": "document_idle"
     }
   ],
@@ -19,8 +16,8 @@
     "default_title": "Copy JIRA Ticket Info"
   },
   "icons": {
-    "16": "src/icons/icon16.png",
-    "48": "src/icons/icon48.png",
-    "128": "src/icons/icon128.png"
+    "16": "dist/icons/icon16.png",
+    "48": "dist/icons/icon48.png",
+    "128": "dist/icons/icon128.png"
   }
 }

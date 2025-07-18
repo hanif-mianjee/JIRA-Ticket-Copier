@@ -2,33 +2,37 @@
 
 Follow these steps to prepare the JIRA Ticket Copier extension for submission:
 
-1. **Verify Functionality**
-   - Test the extension in Chrome on multiple JIRA ticket pages.
-   - Confirm the button appears, copies ticket info, and handles errors/accessibility as expected.
+1. **Build the Extension**
+   - Run:
+     ```sh
+     npm run build
+     ```
+   - This generates all distributable files in `dist/` (including JS and icons).
 
 2. **Clean Up Files**
-   - Remove or exclude test files (`src/utils.test.js`).
    - Ensure only required files are included:
      - `manifest.json`
-     - `src/content.js`
-     - `src/background.js`
-     - `src/utils.js`
-     - `src/icons/icon16.png`, `icon48.png`, `icon128.png`
+     - `dist/` (contains content.js and icons)
      - `README.md` (optional for reviewers)
+     - `packaging_instructions.txt`
 
 3. **Create ZIP Archive**
-   - Select all required files and folders.
-   - Right-click and choose "Compress" or use the command:
+   - Run:
      ```sh
-     zip -r jira-ticket-copier.zip manifest.json src/ README.md
+     zip -r jira-ticket-copier.zip manifest.json dist/ README.md packaging_instructions.txt
      ```
-   - Ensure the ZIP contains no node_modules, .venv, or test files.
+   - Ensure the ZIP contains no `node_modules`, `.venv`, or test files.
 
 4. **Submit to Chrome Web Store**
    - Go to [Chrome Web Store Developer Dashboard](https://chrome.google.com/webstore/devconsole)
    - Upload the ZIP file.
    - Fill out extension details, upload icons, and provide screenshots.
    - Submit for review.
+
+5. **After Submission**
+   - Record reviewer feedback and any required changes in `instruction.txt`.
+   - Note any bugs or user suggestions from initial usage.
+   - Plan next improvements and update documentation as needed.
 
 # Notes
 - Make sure all code is well-documented and matches the latest requirements.

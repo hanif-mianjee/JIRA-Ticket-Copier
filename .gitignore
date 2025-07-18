@@ -9,6 +9,9 @@ node_modules/
 # Chrome Extension Artifacts
 jira-ticket-copier.zip
 
+# Build output
+dist/
+
 # Test & Coverage
 coverage/
 
