@@ -9,9 +9,9 @@
 describe('JIRA Ticket Copier Utilities', () => {
   beforeEach(() => {
     document.body.innerHTML = `
-      <div data-testid="issue.views.issue-base.foundation.breadcrumbs.current-issue.item">AB-1234</div>
-      <div data-testid="issue-field-status.ui.status-view.status-button.status-button">In Progress</div>
-      <h1 data-testid="issue.views.issue-base.foundation.summary.heading">Sample ticket title here</h1>
+      <div data-testid='issue.views.issue-base.foundation.breadcrumbs.current-issue.item'>AB-1234</div>
+      <div data-testid='issue-field-status.ui.status-view.status-button.status-button'>In Progress</div>
+      <h1 data-testid='issue.views.issue-base.foundation.summary.heading'>Sample ticket title here</h1>
     `;
   });
 
@@ -25,7 +25,7 @@ describe('JIRA Ticket Copier Utilities', () => {
         '[data-testid="issue-field-status.ui.status-view.status-button.status-button"]',
       );
       const titleEl = document.querySelector(
-        '[data-testid="issue.views.issue-base.foundation.summary.heading"]',
+        "[data-testid='issue.views.issue-base.foundation.summary.heading']",
       );
       return {
         ticketId: idEl ? idEl.textContent.trim() : '',
@@ -44,13 +44,13 @@ describe('JIRA Ticket Copier Utilities', () => {
     document.body.innerHTML = '';
     const info = (function () {
       const idEl = document.querySelector(
-        '[data-testid="issue.views.issue-base.foundation.breadcrumbs.current-issue.item"]',
+        "[data-testid='issue.views.issue-base.foundation.breadcrumbs.current-issue.item']",
       );
       const statusEl = document.querySelector(
-        '[data-testid="issue-field-status.ui.status-view.status-button.status-button"]',
+        "[data-testid='issue-field-status.ui.status-view.status-button.status-button']",
       );
       const titleEl = document.querySelector(
-        '[data-testid="issue.views.issue-base.foundation.summary.heading"]',
+        "[data-testid='issue.views.issue-base.foundation.summary.heading']",
       );
       return {
         ticketId: idEl ? idEl.textContent.trim() : '',

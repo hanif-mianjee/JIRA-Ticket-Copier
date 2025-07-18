@@ -34,13 +34,13 @@ export function getJiraElements() {
       '[data-testid="issue-field-status.ui.status-view.status-button.status-button"]',
     ),
     titleEl: document.querySelector(
-      '[data-testid="issue.views.issue-base.foundation.summary.heading"]',
+      "[data-testid='issue.views.issue-base.foundation.summary.heading']",
     ),
     jiraStatusWrapper: document.querySelector(
-      '[data-testid="issue.views.issue-base.foundation.status.status-field-wrapper"]',
+      "[data-testid='issue.views.issue-base.foundation.status.status-field-wrapper']",
     ),
     idContainer: document.querySelector(
-      '[data-testid="issue.views.issue-base.foundation.breadcrumbs.breadcrumb-current-issue-container"]',
+      "[data-testid='issue.views.issue-base.foundation.breadcrumbs.breadcrumb-current-issue-container']",
     ),
   };
 }
