@@ -2,34 +2,48 @@
 
 Follow these steps to prepare the JIRA Ticket Copier extension for submission:
 
-1. **Build the Extension**
-   - Run:
+1. **Run All Checks and Build**
+   - Lint and format code:
+     ```sh
+     npm run lint
+     npm run format
+     ```
+   - Run all unit tests:
+     ```sh
+     npm test
+     ```
+   - Validate the manifest:
+     ```sh
+     npm run validate-manifest
+     ```
+   - Build the extension:
      ```sh
      npm run build
      ```
-   - This generates all distributable files in `dist/` (including JS and icons).
+   - Bump version and update changelog:
+     ```sh
+     npm run release
+     ```
+   - Review the extension in Chrome locally for UI/UX and functionality.
 
-2. **Clean Up Files**
-   - Ensure only required files are included:
-     - `manifest.json`
-     - `dist/` (contains content.js and icons)
-     - `README.md` (optional for reviewers)
-     - `packaging_instructions.txt`
-
-3. **Create ZIP Archive**
+2. **Package for Chrome Web Store (Final Step)**
    - Run:
      ```sh
-     zip -r jira-ticket-copier.zip manifest.json dist/ README.md packaging_instructions.txt
+     npm run package
      ```
-   - Ensure the ZIP contains no `node_modules`, `.venv`, or test files.
+   - This creates `jira-ticket-copier.zip` with only the required files:
+     - `manifest.json`
+     - `dist/` (contains `content.js` and `icons/`)
+     - `README.md` (optional)
+     - `packaging_instructions.txt` (optional)
 
-4. **Submit to Chrome Web Store**
+3. **Submit to Chrome Web Store**
    - Go to [Chrome Web Store Developer Dashboard](https://chrome.google.com/webstore/devconsole)
    - Upload the ZIP file.
    - Fill out extension details, upload icons, and provide screenshots.
    - Submit for review.
 
-5. **After Submission**
+4. **After Submission**
    - Record reviewer feedback and any required changes in `instruction.txt`.
    - Note any bugs or user suggestions from initial usage.
    - Plan next improvements and update documentation as needed.
@@ -37,3 +51,4 @@ Follow these steps to prepare the JIRA Ticket Copier extension for submission:
 # Notes
 - Make sure all code is well-documented and matches the latest requirements.
 - Update `instruction.txt` with packaging results and next steps after submission.
+- Always run all checks and review the extension before packaging and release.
