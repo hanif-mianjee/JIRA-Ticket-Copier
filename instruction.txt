@@ -40,10 +40,24 @@ We are building a Chrome extension that integrates with JIRA web pages. It shoul
 
 ## Packaging Steps (July 18, 2025)
 
-1. Run all checks: lint, format, test, validate manifest, build, release.
+1. Run all checks: lint, test, validate manifest, build, release.
 2. Review extension in Chrome locally for UI/UX and functionality.
 3. Run packaging step to create distributable ZIP.
 4. Upload ZIP to Chrome Web Store.
+
+## Automated GitHub Release Workflow (July 18, 2025)
+
+1. After running `npm run release`, push your changes and tags:
+   ```sh
+   git push --follow-tags
+   ```
+2. The `.github/workflows/release.yml` workflow will automatically create a GitHub Release and upload the distributable ZIP as a release asset when a new tag is pushed.
+3. You can also draft a release manually on GitHub if needed, but automation is now the default.
+
+## Notes for Next Developer/Agent
+
+- Do not use or add Prettier/formatting steps; only ESLint is enforced.
+- Always check the README for the latest workflow and release instructions.
 
 ## What’s Next (TODO)
 

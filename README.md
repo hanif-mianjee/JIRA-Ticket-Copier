@@ -85,6 +85,26 @@ npm run release
 - Uses standard-version to bump versions in `package.json`, `manifest.json`, and `package-lock.json`
 - Generates/updates `CHANGELOG.md`
 
+### 6. Publish a GitHub Release
+
+After running `npm run release` and pushing your tag, you must publish a GitHub Release for it to appear on the Releases page:
+
+**Manual:**
+1. Go to the "Releases" tab on GitHub.
+2. Click "Draft a new release" and select the latest tag (e.g., `v0.1.0`).
+3. Add release notes (or let GitHub auto-generate them) and publish.
+
+**Automated:**
+- This repo includes a GitHub Actions workflow (`.github/workflows/release.yml`) that will automatically create a GitHub Release when you push a tag starting with `v` (e.g., `v0.1.0`).
+
+**To create a release tag:**
+```sh
+npm run release
+git push --follow-tags
+```
+
+After the workflow runs, your release will appear on the GitHub Releases page.
+
 ### 6. (Optional) Continuous Integration
 
 - GitHub Actions workflow runs lint, test, build, and packaging on every push/PR
@@ -147,6 +167,7 @@ npm run package
 - [ ] Validate the manifest and all referenced files (`npm run validate-manifest`)
 - [ ] Build the extension (`npm run build`)
 - [ ] Bump version and update changelog (`npm run release`)
+- [ ] Push tags and publish a GitHub Release (see instructions above)
 - [ ] Review the extension in Chrome locally for UI/UX and functionality
 - [ ] Only after all above steps, run the packaging step:
 
