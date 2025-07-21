@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.1.9](https://github.com/hanif-mianjee/JIRA-Ticket-Copier/compare/v0.1.8...v0.1.9) (2025-07-21)
+
+
+### Bug Fixes
+
+* support JIRA /issues/ URLs and activate content script on both page types ([d699844](https://github.com/hanif-mianjee/JIRA-Ticket-Copier/commit/d6998444cb36e531e353af314aaa902a19ed6479))
+
 ### [0.1.8](https://github.com/hanif-mianjee/JIRA-Ticket-Copier/compare/v0.1.7...v0.1.8) (2025-07-18)
 
 ### [0.1.7](https://github.com/hanif-mianjee/JIRA-Ticket-Copier/compare/v0.1.6...v0.1.7) (2025-07-18)

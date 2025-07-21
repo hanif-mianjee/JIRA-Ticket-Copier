@@ -1,14 +1,24 @@
 {
   "manifest_version": 3,
   "name": "JIRA Ticket Copier",
-  "version": "0.1.8",
+  "version": "0.1.9",
   "description": "Copy JIRA ticket info (ID, status, title) to clipboard from ticket pages.",
-  "permissions": ["scripting", "activeTab", "clipboardWrite"],
-  "host_permissions": ["https://*.atlassian.net/*"],
+  "permissions": [
+    "scripting",
+    "activeTab",
+    "clipboardWrite"
+  ],
+  "host_permissions": [
+    "https://*.atlassian.net/*"
+  ],
   "content_scripts": [
     {
-      "matches": ["https://*.atlassian.net/*"],
-      "js": ["dist/content.js"],
+      "matches": [
+        "https://*.atlassian.net/*"
+      ],
+      "js": [
+        "dist/content.js"
+      ],
       "run_at": "document_idle"
     }
   ],
