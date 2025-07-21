@@ -181,7 +181,7 @@ console.log("[JIRA Ticket Copier] Content script loaded");
     observer.observe(document.body, { childList: true, subtree: true });
   }
 
-  if (window.location.href.match(/\/browse\//)) {
+  if (/\/browse\//.test(window.location.href) || /\/issues\//.test(window.location.href)) {
     observeJiraPage();
   }
 })();
