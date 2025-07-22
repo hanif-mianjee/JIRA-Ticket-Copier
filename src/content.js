@@ -159,12 +159,12 @@ console.log("[JIRA Ticket Copier] Content script loaded");
     // Place dropdown and button after ticket ID if possible for better UX
     if (idContainer && idContainer.parentNode) {
       console.log(
-        "[JIRA Ticket Copier] Ticket ID element found, inserting dropdown and button after it",
+        "[JIRA Ticket Copier] Ticket ID element found, inserting dropdown and button after it"
       );
       idContainer.parentNode.appendChild(groupWrapper);
     } else {
       console.warn(
-        "[JIRA Ticket Copier] Ticket ID element not found, appending dropdown and button to header",
+        "[JIRA Ticket Copier] Ticket ID element not found, appending dropdown and button to header"
       );
       jiraStatusWrapper.parentNode.appendChild(groupWrapper);
     }
@@ -181,7 +181,10 @@ console.log("[JIRA Ticket Copier] Content script loaded");
     observer.observe(document.body, { childList: true, subtree: true });
   }
 
-  if (/\/browse\//.test(window.location.href) || /\/issues\//.test(window.location.href)) {
+  if (
+    /\/browse\//.test(window.location.href) ||
+    /\/issues\//.test(window.location.href)
+  ) {
     observeJiraPage();
   }
 })();
