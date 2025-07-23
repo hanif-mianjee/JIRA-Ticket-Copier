@@ -1,7 +1,7 @@
 {
   "type": "module",
   "name": "jira-ticket-copier",
-  "version": "0.1.10",
+  "version": "0.1.11",
   "description": "Copy JIRA ticket info to clipboard from ticket pages.",
   "main": "src/content.js",
   "scripts": {
