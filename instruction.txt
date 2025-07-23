@@ -25,6 +25,7 @@ We are building a Chrome extension that integrates with JIRA web pages. It shoul
 - Extension is ready for Chrome Web Store submission after all checks pass.
 
 ## Milestones
+- ✅ UI polish for git button: border radius, height, icon size, margin, padding, font size, and feedback text spacing
 - ✅ Initial extension scaffold and manifest v3 setup
 - ✅ DOM selectors for JIRA ticket info extraction
 - ✅ Button injection and styling to match JIRA UI
@@ -36,6 +37,19 @@ We are building a Chrome extension that integrates with JIRA web pages. It shoul
 - ✅ Final packaging, ZIP cleanup, and Chrome Web Store submission (July 18, 2025)
   - Packaged as `jira-ticket-copier.zip` (test files and .DS_Store removed)
   - Ready for upload to Chrome Web Store
+- ✅ Add one more button after dropdown (git button for commit message)
+- ✅ On click git button, ticketId and title are copied to clipboard in format: "ticketId: title"
+- ✅ Format copied text: "ticketId: title"
+- ✅ Styling matches JIRA UI, dropdown rounded corners, gray background, white git icon
+## Progress Update (July 23, 2025)
+- Git button UI now matches dropdown/button: 3px border radius, 25px height, 5px margin, 0 3px padding, 14px font, white color, and feedback text with 10px horizontal padding.
+- All feedback and visual issues addressed per user review.
+- Added a new "git" button after the status dropdown in the ticket copier UI group.
+- On click, the git button copies the ticketId and title in the format: "ticketId: title" to clipboard (no status).
+- Button uses a white inline SVG git icon, gray background, rounded corners, and matches JIRA UI styling.
+- Button provides feedback for success, error, and missing info.
+- All code changes are in `src/content.js` (UI logic) and use existing utility functions.
+- No changes to packaging or manifest required for this feature.
 - ⏳ Post-submission feedback and next feature planning
 
 ## Packaging Steps (July 18, 2025)
@@ -60,6 +74,16 @@ We are building a Chrome extension that integrates with JIRA web pages. It shoul
 - Always check the README for the latest workflow and release instructions.
 
 ## What’s Next (TODO)
+7. Review and update unit tests for git button and feedback UI.
+8. Update README screenshots and usage instructions for new UI.
+9. Monitor for further UI/UX feedback after release.
+## What’s Next (TODO)
+1. Review UI/UX for the new git button on different JIRA ticket layouts and browsers.
+2. Add unit tests for the new copy-to-clipboard logic (if not already covered).
+3. Consider making the git button icon configurable (SVG or PNG).
+4. Gather user feedback after Chrome Web Store submission.
+5. Plan for next features: context menu support, options page, localization, or other user requests.
+6. Update documentation and screenshots as needed.
 
 1. After submission, record reviewer feedback and any required changes in this file.
 2. Note any bugs or user suggestions from initial usage.

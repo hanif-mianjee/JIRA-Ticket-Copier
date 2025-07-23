@@ -11,7 +11,7 @@
     "test": "jest --env=jsdom src/*.test.js",
     "prepare": "husky install",
     "release": "standard-version",
-    "validate-manifest": "node .github/workflows/validate-manifest.js"
+    "validate-manifest": "node .github/workflows/validate-manifest.cjs"
   },
   "devDependencies": {
     "@babel/preset-env": "^7.0.0",

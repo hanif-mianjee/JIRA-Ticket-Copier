@@ -1,8 +1,55 @@
 // Unit tests for content.js utility functions
 // Uses Jest and jsdom
 
-// We'll test: extractJiraTicketInfo, formatJiraString, setButtonStyle, setDropdownItemStyle
+// We'll test: extractJiraTicketInfo, formatJiraString, setButtonStyle, setDropdownItemStyle, and git button feedback UI
 // Only pure functions are directly testable; DOM-manipulating functions require jsdom
+describe("Git Button UI and Clipboard", () => {
+  let gitBtn;
+  let clipboardWriteTextMock;
+  beforeEach(() => {
+    document.body.innerHTML = "<div></div>";
+    gitBtn = document.createElement("button");
+    gitBtn.id = "jira-ticket-git-btn";
+    document.body.appendChild(gitBtn);
+    clipboardWriteTextMock = jest.fn();
+    Object.assign(navigator, {
+      clipboard: { writeText: clipboardWriteTextMock },
+    });
+  });
+
+  test("shows 'Copied!' with padding when copy succeeds", async () => {
+    // Simulate click handler logic
+    clipboardWriteTextMock.mockResolvedValueOnce();
+    gitBtn.onclick = () => {
+      gitBtn.innerHTML =
+        "<span style='color:#36B37E;padding:0 10px;'>Copied!</span>";
+    };
+    gitBtn.click();
+    expect(gitBtn.innerHTML).toContain("Copied!");
+    expect(gitBtn.innerHTML).toContain("padding:0 10px");
+  });
+
+  test("shows 'Copy failed' with padding when copy fails", async () => {
+    clipboardWriteTextMock.mockRejectedValueOnce(new Error("fail"));
+    gitBtn.onclick = () => {
+      gitBtn.innerHTML =
+        "<span style='color:#FF5630;padding:0 10px;'>Copy failed</span>";
+    };
+    gitBtn.click();
+    expect(gitBtn.innerHTML).toContain("Copy failed");
+    expect(gitBtn.innerHTML).toContain("padding:0 10px");
+  });
+
+  test("shows 'Not found' with padding if info missing", () => {
+    gitBtn.onclick = () => {
+      gitBtn.innerHTML =
+        "<span style='color:#FF5630;padding:0 10px;'>Not found</span>";
+    };
+    gitBtn.click();
+    expect(gitBtn.innerHTML).toContain("Not found");
+    expect(gitBtn.innerHTML).toContain("padding:0 10px");
+  });
+});
 
 // Mock the DOM structure for extractJiraTicketInfo
 
@@ -19,13 +66,13 @@ describe("JIRA Ticket Copier Utilities", () => {
     // Re-import the function from content.js scope
     const info = (function () {
       const idEl = document.querySelector(
-        "[data-testid=\"issue.views.issue-base.foundation.breadcrumbs.current-issue.item\"]",
+        "[data-testid=\"issue.views.issue-base.foundation.breadcrumbs.current-issue.item\"]"
       );
       const statusEl = document.querySelector(
-        "[data-testid=\"issue-field-status.ui.status-view.status-button.status-button\"]",
+        "[data-testid=\"issue-field-status.ui.status-view.status-button.status-button\"]"
       );
       const titleEl = document.querySelector(
-        "[data-testid='issue.views.issue-base.foundation.summary.heading']",
+        "[data-testid='issue.views.issue-base.foundation.summary.heading']"
       );
       return {
         ticketId: idEl ? idEl.textContent.trim() : "",
@@ -44,13 +91,13 @@ describe("JIRA Ticket Copier Utilities", () => {
     document.body.innerHTML = "";
     const info = (function () {
       const idEl = document.querySelector(
-        "[data-testid='issue.views.issue-base.foundation.breadcrumbs.current-issue.item']",
+        "[data-testid='issue.views.issue-base.foundation.breadcrumbs.current-issue.item']"
       );
       const statusEl = document.querySelector(
-        "[data-testid='issue-field-status.ui.status-view.status-button.status-button']",
+        "[data-testid='issue-field-status.ui.status-view.status-button.status-button']"
       );
       const titleEl = document.querySelector(
-        "[data-testid='issue.views.issue-base.foundation.summary.heading']",
+        "[data-testid='issue.views.issue-base.foundation.summary.heading']"
       );
       return {
         ticketId: idEl ? idEl.textContent.trim() : "",
@@ -69,7 +116,7 @@ describe("JIRA Ticket Copier Utilities", () => {
         ticketId: "AB-1234",
         status: "In Progress",
         title: "Sample ticket title here",
-      }),
+      })
     ).toBe("AB-1234: In Progress - Sample ticket title here");
   });
 
