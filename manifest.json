@@ -3,7 +3,7 @@
   "name": "JIRA Ticket Copier",
   "version": "0.1.11",
   "description": "Quickly copy JIRA ticket details (ID, status, title) or a ready-to-use git commit message from any JIRA Cloud ticket page. Includes a status dropdown, feedback UI, and styling that matches JIRA.",
-  "permissions": ["clipboardWrite"],
+  "permissions": ["clipboardWrite", "storage"],
   "host_permissions": ["https://*.atlassian.net/*"],
   "content_scripts": [
     {
@@ -21,6 +21,7 @@
     "128": "dist/icons/icon128.png"
   },
   "homepage_url": "https://github.com/hanif-mianjee/JIRA-Ticket-Copier",
+  "options_page": "options.html",
   "support_url": "https://github.com/hanif-mianjee/JIRA-Ticket-Copier/issues",
   "keywords": [
     "jira",

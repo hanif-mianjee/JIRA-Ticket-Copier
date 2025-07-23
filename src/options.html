@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>JIRA Ticket Copier Options</title>
+    <link rel="stylesheet" href="options.css" />
+  </head>
+  <body>
+    <div class="options-container">
+      <h2>JIRA Ticket Copier Settings</h2>
+      <label for="commitFormat">Commit message format:</label>
+      <input
+        id="commitFormat"
+        type="text"
+        placeholder="e.g. {{ticketId}}: {{title}}"
+      />
+      <button id="saveBtn">Save</button>
+      <span id="status"></span>
+    </div>
+    <script src="options.js"></script>
+  </body>
+</html>

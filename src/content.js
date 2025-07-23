@@ -1,3 +1,24 @@
+// --- Helper: Format commit message with variables ---
+function formatCommitMessage(format, info) {
+  return format
+    .replace(/{{\s*ticketId\s*}}/g, info.ticketId)
+    .replace(/{{\s*title\s*}}/g, info.title)
+    .replace(/{{\s*status\s*}}/g, info.status);
+}
+
+// --- Helper: Copy to clipboard and show feedback ---
+function copyToClipboardWithFeedback(text, btn) {
+  navigator.clipboard
+    .writeText(text)
+    .then(() => {
+      setGitBtnFeedback(btn, "copied");
+      setTimeout(() => setGitBtnFeedback(btn, "icon"), 1200);
+    })
+    .catch(() => {
+      setGitBtnFeedback(btn, "fail");
+      setTimeout(() => setGitBtnFeedback(btn, "icon"), 1800);
+    });
+}
 import {
   COLORS,
   STATUS_LIST,
@@ -205,17 +226,18 @@ function injectCopyButton() {
       setTimeout(() => setGitBtnFeedback(gitBtn, "icon"), 1800);
       return;
     }
-    const commitMsg = `${info.ticketId}: ${info.title}`;
-    navigator.clipboard
-      .writeText(commitMsg)
-      .then(() => {
-        setGitBtnFeedback(gitBtn, "copied");
-        setTimeout(() => setGitBtnFeedback(gitBtn, "icon"), 1200);
-      })
-      .catch(() => {
-        setGitBtnFeedback(gitBtn, "fail");
-        setTimeout(() => setGitBtnFeedback(gitBtn, "icon"), 1800);
+    // Get user format from Chrome storage, fallback to default
+    if (chrome.storage && chrome.storage.sync) {
+      chrome.storage.sync.get(["commitFormat"], (result) => {
+        const format = result.commitFormat || "{{ticketId}}: {{title}}";
+        const commitMsg = formatCommitMessage(format, info);
+        copyToClipboardWithFeedback(commitMsg, gitBtn);
       });
+    } else {
+      // fallback if chrome.storage is not available
+      const commitMsg = formatCommitMessage("{{ticketId}}: {{title}}", info);
+      copyToClipboardWithFeedback(commitMsg, gitBtn);
+    }
   });
 
   groupWrapper.appendChild(btn);
