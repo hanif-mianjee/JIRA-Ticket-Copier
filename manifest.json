@@ -21,7 +21,7 @@
     "128": "dist/icons/icon128.png"
   },
   "homepage_url": "https://github.com/hanif-mianjee/JIRA-Ticket-Copier",
-  "options_page": "options.html",
+  "options_page": "dist/options/options.html",
   "support_url": "https://github.com/hanif-mianjee/JIRA-Ticket-Copier/issues",
   "keywords": [
     "jira",
