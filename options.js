@@ -1,39 +1,43 @@
 document.addEventListener("DOMContentLoaded", () => {
   const commitFormatInput = document.getElementById("commitFormat");
-  const saveBtn = document.getElementById("saveBtn");
+  const ticketInfoFormatInput = document.getElementById("ticketInfoFormat");
   const status = document.getElementById("status");
+  const form = document.getElementById("optionsForm");
 
-  // Load saved format
-  if (chrome && chrome.storage && chrome.storage.sync) {
-    chrome.storage.sync.get(["commitFormat"], (result) => {
-      if (chrome.runtime && chrome.runtime.lastError) {
-        console.error("Error loading commitFormat:", chrome.runtime.lastError);
-        status.textContent = "Error loading settings";
-        return;
-      }
-      if (result.commitFormat) {
-        commitFormatInput.value = result.commitFormat;
-        console.log("Loaded commitFormat:", result.commitFormat);
-      } else {
-        console.log("No commitFormat found, using default");
-      }
-    });
-  } else {
-    console.error("chrome.storage.sync is not available");
-    status.textContent = "Storage unavailable";
+  // Load saved formats
+  function loadOptions() {
+    if (chrome && chrome.storage && chrome.storage.sync) {
+      chrome.storage.sync.get(
+        ["commitFormat", "ticketInfoFormat"],
+        (result) => {
+          if (chrome.runtime && chrome.runtime.lastError) {
+            console.error("Error loading formats:", chrome.runtime.lastError);
+            status.textContent = "Error loading settings";
+            return;
+          }
+          commitFormatInput.value = result.commitFormat || "";
+          ticketInfoFormatInput.value = result.ticketInfoFormat || "";
+        }
+      );
+    } else {
+      console.error("chrome.storage.sync is not available");
+      status.textContent = "Storage unavailable";
+    }
   }
 
-  saveBtn.addEventListener("click", () => {
-    const format = commitFormatInput.value.trim();
+  // Save handler
+  form.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const commitFormat = commitFormatInput.value.trim();
+    const ticketInfoFormat = ticketInfoFormatInput.value.trim();
     if (chrome && chrome.storage && chrome.storage.sync) {
-      chrome.storage.sync.set({ commitFormat: format }, () => {
+      chrome.storage.sync.set({ commitFormat, ticketInfoFormat }, () => {
         if (chrome.runtime && chrome.runtime.lastError) {
-          console.error("Error saving commitFormat:", chrome.runtime.lastError);
+          console.error("Error saving formats:", chrome.runtime.lastError);
           status.textContent = "Error saving!";
           return;
         }
         status.textContent = "Saved!";
-        console.log("Saved commitFormat:", format);
         setTimeout(() => (status.textContent = ""), 1500);
       });
     } else {
@@ -41,4 +45,6 @@ document.addEventListener("DOMContentLoaded", () => {
       status.textContent = "Storage unavailable";
     }
   });
+
+  loadOptions();
 });
