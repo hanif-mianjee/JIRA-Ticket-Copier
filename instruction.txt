@@ -50,6 +50,8 @@ We are building a Chrome extension that integrates with JIRA web pages. It shoul
 - Button provides feedback for success, error, and missing info.
 - All code changes are in `src/content.js` (UI logic) and use existing utility functions.
 - No changes to packaging or manifest required for this feature.
+- ⏳ Add options_page or options_ui:
+   - add user-configurable settings (e.g., custom commit format).
 - ⏳ Post-submission feedback and next feature planning
 
 ## Packaging Steps (July 18, 2025)

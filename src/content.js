@@ -1,3 +1,70 @@
+// --- Helper: Copy to clipboard and show feedback for main button ---
+// --- Helper: Copy ticket info with user format and feedback ---
+// --- Generalized Helper: Copy to clipboard and show feedback ---
+function copyToClipboardWithFeedback(text, btn, feedback) {
+  navigator.clipboard
+    .writeText(text)
+    .then(() => feedback.success(btn))
+    .catch(() => feedback.fail(btn));
+}
+
+// --- Feedback strategies ---
+const mainBtnFeedback = {
+  success: (btn) => {
+    btn.textContent = "Copied!";
+    setTimeout(() => {
+      btn.textContent = "Copy Ticket Info";
+    }, 1200);
+  },
+  fail: (btn) => {
+    btn.textContent = "Copy failed";
+    btn.style.background = COLORS.error;
+    setTimeout(() => {
+      btn.textContent = "Copy Ticket Info";
+      btn.style.background = COLORS.buttonBgActive;
+    }, 1800);
+  },
+};
+const gitBtnFeedback = {
+  success: (btn) => {
+    setGitBtnFeedback(btn, "copied");
+    setTimeout(() => setGitBtnFeedback(btn, "icon"), 1200);
+  },
+  fail: (btn) => {
+    setGitBtnFeedback(btn, "fail");
+    setTimeout(() => setGitBtnFeedback(btn, "icon"), 1800);
+  },
+};
+
+// --- Helper: Copy ticket info with user format and feedback ---
+function copyTicketInfoToClipboard(info, statusToUse, btn) {
+  const doCopy = (format) => {
+    const formatted = formatCommitMessage(format, {
+      ticketId: info.ticketId,
+      status: statusToUse,
+      title: info.title,
+    });
+    copyToClipboardWithFeedback(formatted, btn, mainBtnFeedback);
+  };
+  if (chrome.storage && chrome.storage.sync) {
+    chrome.storage.sync.get(["ticketInfoFormat"], (result) => {
+      const format =
+        result.ticketInfoFormat || "{{ticketId}}: {{status}} - {{title}}";
+      doCopy(format);
+    });
+  } else {
+    doCopy("{{ticketId}}: {{status}} - {{title}}");
+  }
+}
+// --- Helper: Format commit message with variables ---
+function formatCommitMessage(format, info) {
+  return format
+    .replace(/{{\s*ticketId\s*}}/g, info.ticketId)
+    .replace(/{{\s*title\s*}}/g, info.title)
+    .replace(/{{\s*status\s*}}/g, info.status);
+}
+
+// --- Helper: Copy to clipboard and show feedback ---
 import {
   COLORS,
   STATUS_LIST,
@@ -156,11 +223,6 @@ function injectCopyButton() {
   function triggerCopy() {
     const info = extractJiraTicketInfo();
     const statusToUse = selectedStatus.value || info.status;
-    const formatted = formatJiraString({
-      ticketId: info.ticketId,
-      status: statusToUse,
-      title: info.title,
-    });
     const btn = document.getElementById("jira-ticket-copy-btn");
     if (!info.ticketId || !statusToUse || !info.title) {
       btn.textContent = "Ticket info not found";
@@ -171,22 +233,7 @@ function injectCopyButton() {
       }, 1800);
       return;
     }
-    navigator.clipboard
-      .writeText(formatted)
-      .then(() => {
-        btn.textContent = "Copied!";
-        setTimeout(() => {
-          btn.textContent = "Copy Ticket Info";
-        }, 1200);
-      })
-      .catch(() => {
-        btn.textContent = "Copy failed";
-        btn.style.background = COLORS.error;
-        setTimeout(() => {
-          btn.textContent = "Copy Ticket Info";
-          btn.style.background = COLORS.buttonBgActive;
-        }, 1800);
-      });
+    copyTicketInfoToClipboard(info, statusToUse, btn);
   }
 
   // --- UI assembly ---
@@ -199,23 +246,24 @@ function injectCopyButton() {
   const btn = createCopyButton(triggerCopy);
   const dropdownWrapper = createDropdown(selectedStatus, triggerCopy);
   const gitBtn = createGitButton(() => {
-    const info = extractJiraTicketInfo();
-    if (!info.ticketId || !info.title) {
+    const gitInfo = extractJiraTicketInfo();
+    if (!gitInfo.ticketId || !gitInfo.title) {
       setGitBtnFeedback(gitBtn, "notfound");
       setTimeout(() => setGitBtnFeedback(gitBtn, "icon"), 1800);
       return;
     }
-    const commitMsg = `${info.ticketId}: ${info.title}`;
-    navigator.clipboard
-      .writeText(commitMsg)
-      .then(() => {
-        setGitBtnFeedback(gitBtn, "copied");
-        setTimeout(() => setGitBtnFeedback(gitBtn, "icon"), 1200);
-      })
-      .catch(() => {
-        setGitBtnFeedback(gitBtn, "fail");
-        setTimeout(() => setGitBtnFeedback(gitBtn, "icon"), 1800);
+    const doCopy = (format) => {
+      const commitMsg = formatCommitMessage(format, gitInfo);
+      copyToClipboardWithFeedback(commitMsg, gitBtn, gitBtnFeedback);
+    };
+    if (chrome.storage && chrome.storage.sync) {
+      chrome.storage.sync.get(["commitFormat"], (result) => {
+        const format = result.commitFormat || "{{ticketId}}: {{title}}";
+        doCopy(format);
       });
+    } else {
+      doCopy("{{ticketId}}: {{title}}");
+    }
   });
 
   groupWrapper.appendChild(btn);

@@ -197,6 +197,10 @@ See `/screenshots/` for example UI.
 
 ---
 
+# Privacy & Security
+
+This extension does not collect, store, or transmit any user data. All actions are performed locally in your browser.
+
 ## Contributing
 
 PRs and issues welcome! Please document code and update/add tests for new features.

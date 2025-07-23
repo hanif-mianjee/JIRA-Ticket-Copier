@@ -2,21 +2,13 @@
   "manifest_version": 3,
   "name": "JIRA Ticket Copier",
   "version": "0.1.11",
-  "description": "Copy JIRA ticket info (ID, status, title) to clipboard from ticket pages.",
-  "permissions": [
-    "clipboardWrite"
-  ],
-  "host_permissions": [
-    "https://*.atlassian.net/*"
-  ],
+  "description": "Quickly copy JIRA ticket details (ID, status, title) or a ready-to-use git commit message from any JIRA Cloud ticket page. Includes a status dropdown, feedback UI, and styling that matches JIRA.",
+  "permissions": ["clipboardWrite", "storage"],
+  "host_permissions": ["https://*.atlassian.net/*"],
   "content_scripts": [
     {
-      "matches": [
-        "https://*.atlassian.net/*"
-      ],
-      "js": [
-        "dist/content.js"
-      ],
+      "matches": ["https://*.atlassian.net/*"],
+      "js": ["dist/content.js"],
       "run_at": "document_idle"
     }
   ],
@@ -27,5 +19,20 @@
     "16": "dist/icons/icon16.png",
     "48": "dist/icons/icon48.png",
     "128": "dist/icons/icon128.png"
-  }
+  },
+  "homepage_url": "https://github.com/hanif-mianjee/JIRA-Ticket-Copier",
+  "options_page": "dist/options/options.html",
+  "support_url": "https://github.com/hanif-mianjee/JIRA-Ticket-Copier/issues",
+  "keywords": [
+    "jira",
+    "ticket",
+    "copy",
+    "clipboard",
+    "commit message",
+    "git",
+    "chrome extension",
+    "atlassian",
+    "productivity",
+    "issue tracker"
+  ]
 }

@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>JIRA Ticket Copier Options</title>
+    <link rel="stylesheet" href="options.css" />
+  </head>
+  <body>
+    <div class="options-container">
+      <h2>JIRA Ticket Copier Settings</h2>
+      <!-- Removed duplicate legacy fields and help section -->
+      <form id="optionsForm" autocomplete="off">
+        <fieldset style="border: none; padding: 0; margin: 0 0 18px 0">
+          <legend style="font-weight: bold; margin-bottom: 6px">
+            Ticket Info Button
+          </legend>
+          <label for="ticketInfoFormat">Format:</label>
+          <input
+            id="ticketInfoFormat"
+            type="text"
+            placeholder="e.g. {{ticketId}}: {{status}} - {{title}}"
+            aria-describedby="varsHelp"
+          />
+        </fieldset>
+        <fieldset style="border: none; padding: 0; margin: 0 0 18px 0">
+          <legend style="font-weight: bold; margin-bottom: 6px">
+            Git Button
+          </legend>
+          <label for="commitFormat">Format:</label>
+          <input
+            id="commitFormat"
+            type="text"
+            placeholder="e.g. {{ticketId}}: {{title}}"
+            aria-describedby="varsHelp"
+          />
+        </fieldset>
+        <div
+          id="varsHelp"
+          class="help-text"
+          style="font-size: 0.97em; color: #6b778c; margin-bottom: 10px"
+        >
+          <strong>Available variables:</strong><br />
+          <code>{{ticketId}}</code> – JIRA ticket key<br />
+          <code>{{title}}</code> – Ticket title<br />
+          <code>{{status}}</code> – Ticket status
+        </div>
+        <button id="saveBtn" type="submit">Save</button>
+        <span id="status" role="status" aria-live="polite"></span>
+      </form>
+    </div>
+    <script src="options.js"></script>
+  </body>
+</html>
