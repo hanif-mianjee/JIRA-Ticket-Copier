@@ -3,7 +3,7 @@
   "description": "Quickly copy JIRA ticket details or a ready-to-use git commit message from any JIRA Cloud ticket page. Includes a status dropdown, feedback UI, and JIRA-matching styling.",
   "type": "module",
   "name": "jira-ticket-copier",
-  "version": "0.1.11",
+  "version": "0.1.12",
   "main": "src/content.js",
   "scripts": {
     "build": "vite build && node copy-icons.mjs && node copy-options.mjs",
