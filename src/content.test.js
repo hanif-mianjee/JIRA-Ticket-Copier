@@ -54,6 +54,21 @@ describe("Git Button UI and Clipboard", () => {
 // Mock the DOM structure for extractJiraTicketInfo
 
 describe("JIRA Ticket Copier Utilities", () => {
+  test("extractJiraTicketInfo returns empty status if statusEl contains CSS", () => {
+    document.body.innerHTML = `
+      <div data-testid='issue.views.issue-base.foundation.breadcrumbs.current-issue.item'>AB-1234</div>
+      <div data-testid='issue-field-status.ui.status-view.status-button.status-button'>{opacity:1;}</div>
+      <h1 data-testid='issue.views.issue-base.foundation.summary.heading'>Sample ticket title here</h1>
+    `;
+    // Use the actual extractJiraTicketInfo from utils.js
+    const { extractJiraTicketInfo } = require("./utils.js");
+    const info = extractJiraTicketInfo();
+    expect(info).toEqual({
+      ticketId: "AB-1234",
+      status: "",
+      title: "Sample ticket title here",
+    });
+  });
   beforeEach(() => {
     document.body.innerHTML = `
       <div data-testid='issue.views.issue-base.foundation.breadcrumbs.current-issue.item'>AB-1234</div>

@@ -38,6 +38,20 @@ const gitBtnFeedback = {
 
 // --- Helper: Copy ticket info with user format and feedback ---
 function copyTicketInfoToClipboard(info, statusToUse, btn) {
+  // Defensive: Only copy if ticketId and status are valid
+  if (!info.ticketId || !info.title) {
+    mainBtnFeedback.fail(btn);
+    return;
+  }
+  if (!statusToUse) {
+    btn.textContent = "Status not found";
+    btn.style.background = COLORS.error;
+    setTimeout(() => {
+      btn.textContent = "Copy Ticket Info";
+      btn.style.background = COLORS.buttonBgActive;
+    }, 1800);
+    return;
+  }
   const doCopy = (format) => {
     const formatted = formatCommitMessage(format, {
       ticketId: info.ticketId,
@@ -217,6 +231,14 @@ function injectCopyButton() {
     console.warn("[JIRA Ticket Copier] JIRA Status Wrapper not found");
     return;
   }
+
+  // Only inject if status is loaded and valid
+  const info = extractJiraTicketInfo();
+  if (!info.status) {
+    console.log("[JIRA Ticket Copier] Status not loaded, not injecting button");
+    return;
+  }
+
   const selectedStatus = { value: null };
 
   // --- Copy logic ---

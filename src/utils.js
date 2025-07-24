@@ -28,28 +28,34 @@ export const STATUS_LIST = [
 export function getJiraElements() {
   return {
     idEl: document.querySelector(
-      "[data-testid=\"issue.views.issue-base.foundation.breadcrumbs.current-issue.item\"]",
+      "[data-testid=\"issue.views.issue-base.foundation.breadcrumbs.current-issue.item\"]"
     ),
     statusEl: document.querySelector(
-      "[data-testid=\"issue-field-status.ui.status-view.status-button.status-button\"]",
+      "[data-testid=\"issue-field-status.ui.status-view.status-button.status-button\"]"
     ),
     titleEl: document.querySelector(
-      "[data-testid='issue.views.issue-base.foundation.summary.heading']",
+      "[data-testid='issue.views.issue-base.foundation.summary.heading']"
     ),
     jiraStatusWrapper: document.querySelector(
-      "[data-testid='issue.views.issue-base.foundation.status.status-field-wrapper']",
+      "[data-testid='issue.views.issue-base.foundation.status.status-field-wrapper']"
     ),
     idContainer: document.querySelector(
-      "[data-testid='issue.views.issue-base.foundation.breadcrumbs.breadcrumb-current-issue-container']",
+      "[data-testid='issue.views.issue-base.foundation.breadcrumbs.breadcrumb-current-issue-container']"
     ),
   };
 }
 
 export function extractJiraTicketInfo() {
   const { idEl, statusEl, titleEl } = getJiraElements();
+  // Defensive: status sometimes contains CSS or is empty if not loaded
+  let status = statusEl ? statusEl.textContent.trim() : "";
+  // If status contains '{' or '}', it's likely CSS, not a real status
+  if (status && /[{]|[}]/.test(status)) {
+    status = "";
+  }
   return {
     ticketId: idEl ? idEl.textContent.trim() : "",
-    status: statusEl ? statusEl.textContent.trim() : "",
+    status,
     title: titleEl ? titleEl.textContent.trim() : "",
   };
 }
