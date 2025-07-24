@@ -2,22 +2,13 @@
   "manifest_version": 3,
   "name": "JIRA Ticket Copier",
   "version": "0.1.12",
-  "description": "Quickly copy JIRA ticket details (ID, status, title) or a ready-to-use git commit message from any JIRA Cloud ticket page. Includes a status dropdown, feedback UI, and styling that matches JIRA.",
-  "permissions": [
-    "clipboardWrite",
-    "storage"
-  ],
-  "host_permissions": [
-    "https://*.atlassian.net/*"
-  ],
+  "description": "Copy JIRA ticket details (ID, status, title) or a ready-to-use git commit message from any JIRA Cloud ticket page. Features: status dropdown, feedback UI, retry/wait for page load, accessibility, and JIRA-matching styling. Reliable, fast, and configurable.",
+  "permissions": ["clipboardWrite", "storage"],
+  "host_permissions": ["https://*.atlassian.net/*"],
   "content_scripts": [
     {
-      "matches": [
-        "https://*.atlassian.net/*"
-      ],
-      "js": [
-        "dist/content.js"
-      ],
+      "matches": ["https://*.atlassian.net/*"],
+      "js": ["dist/content.js"],
       "run_at": "document_idle"
     }
   ],
