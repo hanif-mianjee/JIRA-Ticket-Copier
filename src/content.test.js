@@ -51,6 +51,53 @@ describe("Git Button UI and Clipboard", () => {
   });
 });
 
+describe("Link Button UI and Clipboard", () => {
+  let linkBtn;
+  let clipboardWriteMock;
+  beforeEach(() => {
+    document.body.innerHTML = "<div></div>";
+    linkBtn = document.createElement("button");
+    linkBtn.id = "jira-ticket-link-btn";
+    document.body.appendChild(linkBtn);
+    clipboardWriteMock = jest.fn();
+    Object.assign(navigator, {
+      clipboard: { write: clipboardWriteMock },
+    });
+  });
+
+  test("shows 'Copied!' with padding when link copy succeeds", async () => {
+    clipboardWriteMock.mockResolvedValueOnce();
+    linkBtn.onclick = () => {
+      linkBtn.innerHTML =
+        "<span style='color:#36B37E;padding:0 10px;'>Copied!</span>";
+    };
+    linkBtn.click();
+    expect(linkBtn.innerHTML).toContain("Copied!");
+    expect(linkBtn.innerHTML).toContain("padding:0 10px");
+  });
+
+  test("shows 'Copy failed' with padding when link copy fails", async () => {
+    clipboardWriteMock.mockRejectedValueOnce(new Error("fail"));
+    linkBtn.onclick = () => {
+      linkBtn.innerHTML =
+        "<span style='color:#FF5630;padding:0 10px;'>Copy failed</span>";
+    };
+    linkBtn.click();
+    expect(linkBtn.innerHTML).toContain("Copy failed");
+    expect(linkBtn.innerHTML).toContain("padding:0 10px");
+  });
+
+  test("shows 'Not found' with padding if info missing", () => {
+    linkBtn.onclick = () => {
+      linkBtn.innerHTML =
+        "<span style='color:#FF5630;padding:0 10px;'>Not found</span>";
+    };
+    linkBtn.click();
+    expect(linkBtn.innerHTML).toContain("Not found");
+    expect(linkBtn.innerHTML).toContain("padding:0 10px");
+  });
+});
+
 // Mock the DOM structure for extractJiraTicketInfo
 
 describe("JIRA Ticket Copier Utilities", () => {

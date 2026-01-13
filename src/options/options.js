@@ -1,6 +1,7 @@
 document.addEventListener("DOMContentLoaded", () => {
   const commitFormatInput = document.getElementById("commitFormat");
   const ticketInfoFormatInput = document.getElementById("ticketInfoFormat");
+  const linkFormatInput = document.getElementById("linkFormat");
   const status = document.getElementById("status");
   const form = document.getElementById("optionsForm");
 
@@ -8,7 +9,7 @@ document.addEventListener("DOMContentLoaded", () => {
   function loadOptions() {
     if (chrome && chrome.storage && chrome.storage.sync) {
       chrome.storage.sync.get(
-        ["commitFormat", "ticketInfoFormat"],
+        ["commitFormat", "ticketInfoFormat", "linkFormat"],
         (result) => {
           if (chrome.runtime && chrome.runtime.lastError) {
             console.error("Error loading formats:", chrome.runtime.lastError);
@@ -17,6 +18,7 @@ document.addEventListener("DOMContentLoaded", () => {
           }
           commitFormatInput.value = result.commitFormat || "";
           ticketInfoFormatInput.value = result.ticketInfoFormat || "";
+          linkFormatInput.value = result.linkFormat || "";
         }
       );
     } else {
@@ -30,8 +32,9 @@ document.addEventListener("DOMContentLoaded", () => {
     e.preventDefault();
     const commitFormat = commitFormatInput.value.trim();
     const ticketInfoFormat = ticketInfoFormatInput.value.trim();
+    const linkFormat = linkFormatInput.value.trim();
     if (chrome && chrome.storage && chrome.storage.sync) {
-      chrome.storage.sync.set({ commitFormat, ticketInfoFormat }, () => {
+      chrome.storage.sync.set({ commitFormat, ticketInfoFormat, linkFormat }, () => {
         if (chrome.runtime && chrome.runtime.lastError) {
           console.error("Error saving formats:", chrome.runtime.lastError);
           status.textContent = "Error saving!";
