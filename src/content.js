@@ -280,8 +280,8 @@ function createCopyButton(triggerCopy) {
 }
 
 function injectCopyButton() {
-  if (document.getElementById("jira-ticket-copy-btn")) {
-    console.log("[JIRA Ticket Copier] Button already exists");
+  if (document.getElementById("jira-ticket-copier-group")) {
+    console.log("[JIRA Ticket Copier] Button group already exists");
     return;
   }
   const { jiraStatusWrapper, idContainer } = getJiraElements();
@@ -322,6 +322,19 @@ function injectCopyButton() {
   groupWrapper.style.marginLeft = "8px";
   groupWrapper.style.display = "inline-flex";
   groupWrapper.style.alignItems = "center";
+
+  // Append group wrapper immediately to prevent race conditions with MutationObserver
+  if (idContainer && idContainer.parentNode) {
+    console.log(
+      "[JIRA Ticket Copier] Ticket ID element found, inserting dropdown and button after it"
+    );
+    idContainer.parentNode.appendChild(groupWrapper);
+  } else {
+    console.warn(
+      "[JIRA Ticket Copier] Ticket ID element not found, appending dropdown and button to header"
+    );
+    jiraStatusWrapper.parentNode.appendChild(groupWrapper);
+  }
 
   const btn = createCopyButton(triggerCopy);
   const dropdownWrapper = createDropdown(selectedStatus, triggerCopy);
@@ -374,21 +387,26 @@ function injectCopyButton() {
     }
   });
 
-  groupWrapper.appendChild(btn);
-  groupWrapper.appendChild(dropdownWrapper);
-  groupWrapper.appendChild(gitBtn);
-  groupWrapper.appendChild(linkBtn);
+  // Conditionally append buttons based on settings
+  const appendButtons = (settings) => {
+    if (settings.enableTicketInfo !== false) {
+      groupWrapper.appendChild(btn);
+      groupWrapper.appendChild(dropdownWrapper);
+    }
+    if (settings.enableGitButton !== false) {
+      groupWrapper.appendChild(gitBtn);
+    }
+    if (settings.enableLinkButton !== false) {
+      groupWrapper.appendChild(linkBtn);
+    }
+  };
 
-  if (idContainer && idContainer.parentNode) {
-    console.log(
-      "[JIRA Ticket Copier] Ticket ID element found, inserting dropdown and button after it"
-    );
-    idContainer.parentNode.appendChild(groupWrapper);
+  if (chrome.storage && chrome.storage.sync) {
+    chrome.storage.sync.get(["enableTicketInfo", "enableGitButton", "enableLinkButton"], (result) => {
+      appendButtons(result);
+    });
   } else {
-    console.warn(
-      "[JIRA Ticket Copier] Ticket ID element not found, appending dropdown and button to header"
-    );
-    jiraStatusWrapper.parentNode.appendChild(groupWrapper);
+    appendButtons({});
   }
 }
 
