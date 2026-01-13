@@ -98,6 +98,59 @@ describe("Link Button UI and Clipboard", () => {
   });
 });
 
+describe("List View Button UI", () => {
+  let listBtn;
+  let clipboardWriteMock;
+
+  beforeEach(() => {
+    document.body.innerHTML = `
+      <div role="row" class="BaseTable__row">
+        <a data-testid="business-list.ui.list-view.key-cell.issue-key" href="/browse/OM-410">OM-410</a>
+        <div data-testid="business-list.ui.list-view.text-cell.text-cell-wrapper">
+          <span data-testid="business-list.ui.list-view.summary-cell">Test ticket title</span>
+        </div>
+        <div data-testid="business-list.ui.list-view.status-cell.cell-container">To Do</div>
+      </div>
+    `;
+    listBtn = document.createElement("button");
+    listBtn.className = "jira-list-copy-link-btn";
+    document.body.appendChild(listBtn);
+    clipboardWriteMock = jest.fn();
+    Object.assign(navigator, {
+      clipboard: { write: clipboardWriteMock },
+    });
+  });
+
+  test("shows checkmark when list copy succeeds", async () => {
+    clipboardWriteMock.mockResolvedValueOnce();
+    listBtn.onclick = () => {
+      listBtn.innerHTML = "<span style='color:#36B37E;font-size:10px;'>✓</span>";
+    };
+    listBtn.click();
+    expect(listBtn.innerHTML).toContain("✓");
+    expect(listBtn.innerHTML).toContain("color:#36B37E");
+  });
+
+  test("shows X when list copy fails", async () => {
+    clipboardWriteMock.mockRejectedValueOnce(new Error("fail"));
+    listBtn.onclick = () => {
+      listBtn.innerHTML = "<span style='color:#FF5630;font-size:10px;'>✗</span>";
+    };
+    listBtn.click();
+    expect(listBtn.innerHTML).toContain("✗");
+    expect(listBtn.innerHTML).toContain("color:#FF5630");
+  });
+
+  test("shows exclamation if info missing", () => {
+    listBtn.onclick = () => {
+      listBtn.innerHTML = "<span style='color:#FF5630;font-size:10px;'>!</span>";
+    };
+    listBtn.click();
+    expect(listBtn.innerHTML).toContain("!");
+    expect(listBtn.innerHTML).toContain("color:#FF5630");
+  });
+});
+
 // Mock the DOM structure for extractJiraTicketInfo
 
 describe("JIRA Ticket Copier Utilities", () => {

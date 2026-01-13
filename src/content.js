@@ -400,9 +400,137 @@ function observeJiraPage() {
   observer.observe(document.body, { childList: true, subtree: true });
 }
 
-if (
-  /\/browse\//.test(window.location.href) ||
-  /\/issues\//.test(window.location.href)
-) {
+// --- List View Support ---
+function extractListRowInfo(row) {
+  const keyLink = row.querySelector("[data-testid=\"business-list.ui.list-view.key-cell.issue-key\"]");
+  const summaryEl = row.querySelector("[data-testid=\"business-list.ui.list-view.summary-cell\"]");
+  const statusContainer = row.querySelector("[data-testid=\"business-list.ui.list-view.status-cell.cell-container\"]");
+
+  const ticketId = keyLink?.textContent?.trim() || "";
+  const baseUrl = window.location.origin;
+  const ticketUrl = keyLink ? `${baseUrl}${keyLink.getAttribute("href")}` : "";
+  const title = summaryEl?.textContent?.trim() || "";
+  const status = statusContainer?.textContent?.trim() || "";
+
+  return { ticketId, ticketUrl, title, status };
+}
+
+function createListRowCopyButton(row) {
+  const btn = document.createElement("button");
+  btn.className = "jira-list-copy-link-btn";
+  btn.setAttribute("aria-label", "Copy ticket link");
+  btn.setAttribute("tabindex", "0");
+  Object.assign(btn.style, {
+    background: "#6B778C",
+    color: "#fff",
+    border: "none",
+    borderRadius: "3px",
+    padding: "0 4px",
+    cursor: "pointer",
+    fontSize: "12px",
+    display: "inline-flex",
+    alignItems: "center",
+    justifyContent: "center",
+    height: "20px",
+    width: "20px",
+    transition: "background 0.2s",
+    marginLeft: "6px",
+    flexShrink: "0",
+  });
+  btn.onmouseenter = () => (btn.style.background = "#42526E");
+  btn.onmouseleave = () => (btn.style.background = "#6B778C");
+  btn.innerHTML = "<svg width='14' height='14' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'><path d='M10 13a4 4 0 0 0 5.66 0l2-2a4 4 0 0 0-5.66-5.66l-1 1' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/><path d='M14 11a4 4 0 0 0-5.66 0l-2 2a4 4 0 0 0 5.66 5.66l1-1' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/></svg>";
+
+  btn.onclick = (e) => {
+    e.stopPropagation();
+    e.preventDefault();
+    const info = extractListRowInfo(row);
+    if (!info.ticketId || !info.title) {
+      btn.innerHTML = "<span style='color:#FF5630;font-size:10px;'>!</span>";
+      setTimeout(() => {
+        btn.innerHTML = "<svg width='14' height='14' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'><path d='M10 13a4 4 0 0 0 5.66 0l2-2a4 4 0 0 0-5.66-5.66l-1 1' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/><path d='M14 11a4 4 0 0 0-5.66 0l-2 2a4 4 0 0 0 5.66 5.66l1-1' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/></svg>";
+      }, 1500);
+      return;
+    }
+
+    const doCopyLink = (format) => {
+      const linkText = formatCommitMessage(format, info);
+      const htmlContent = `<a href="${info.ticketUrl}">${linkText}</a>`;
+      const htmlBlob = new Blob([htmlContent], { type: "text/html" });
+      const textBlob = new Blob([linkText], { type: "text/plain" });
+      navigator.clipboard
+        .write([new ClipboardItem({ "text/html": htmlBlob, "text/plain": textBlob })])
+        .then(() => {
+          btn.innerHTML = "<span style='color:#36B37E;font-size:10px;'>✓</span>";
+          setTimeout(() => {
+            btn.innerHTML = "<svg width='14' height='14' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'><path d='M10 13a4 4 0 0 0 5.66 0l2-2a4 4 0 0 0-5.66-5.66l-1 1' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/><path d='M14 11a4 4 0 0 0-5.66 0l-2 2a4 4 0 0 0 5.66 5.66l1-1' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/></svg>";
+          }, 1200);
+        })
+        .catch(() => {
+          btn.innerHTML = "<span style='color:#FF5630;font-size:10px;'>✗</span>";
+          setTimeout(() => {
+            btn.innerHTML = "<svg width='14' height='14' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'><path d='M10 13a4 4 0 0 0 5.66 0l2-2a4 4 0 0 0-5.66-5.66l-1 1' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/><path d='M14 11a4 4 0 0 0-5.66 0l-2 2a4 4 0 0 0 5.66 5.66l1-1' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/></svg>";
+          }, 1500);
+        });
+    };
+
+    if (chrome.storage && chrome.storage.sync) {
+      chrome.storage.sync.get(["linkFormat"], (result) => {
+        const format = result.linkFormat || "{{ticketId}}: {{title}}";
+        doCopyLink(format);
+      });
+    } else {
+      doCopyLink("{{ticketId}}: {{title}}");
+    }
+  };
+
+  return btn;
+}
+
+function injectListViewButtons() {
+  const summarySelector = "[data-testid=\"business-list.ui.list-view.summary-cell\"]";
+  const summaryCells = document.querySelectorAll(summarySelector);
+
+  summaryCells.forEach((summaryCell) => {
+    const row = summaryCell.closest("[role=\"row\"], .BaseTable__row");
+    if (!row) return;
+    if (row.querySelector(".jira-list-copy-link-btn")) return;
+
+    const cellWrapper = summaryCell.closest("[data-testid=\"business-list.ui.list-view.text-cell.text-cell-wrapper\"]");
+    if (cellWrapper) {
+      cellWrapper.style.display = "flex";
+      cellWrapper.style.alignItems = "center";
+      cellWrapper.style.justifyContent = "space-between";
+      const copyBtn = createListRowCopyButton(row);
+      cellWrapper.appendChild(copyBtn);
+    }
+  });
+}
+
+function observeListPage() {
+  injectListViewButtons();
+  const observer = new MutationObserver(() => {
+    injectListViewButtons();
+  });
+  observer.observe(document.body, { childList: true, subtree: true });
+}
+
+// --- Page Detection and Initialization ---
+const isTicketPage = /\/browse\//.test(window.location.href) || /\/issues\//.test(window.location.href);
+const isListPage = /\/jira\/software\//.test(window.location.href);
+
+if (isTicketPage) {
   observeJiraPage();
+}
+
+if (isListPage) {
+  if (chrome.storage && chrome.storage.sync) {
+    chrome.storage.sync.get(["enableListView"], (result) => {
+      if (result.enableListView !== false) {
+        observeListPage();
+      }
+    });
+  } else {
+    observeListPage();
+  }
 }
