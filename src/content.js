@@ -35,6 +35,16 @@ const gitBtnFeedback = {
     setTimeout(() => setGitBtnFeedback(btn, "icon"), 1800);
   },
 };
+const linkBtnFeedback = {
+  success: (btn) => {
+    setLinkBtnFeedback(btn, "copied");
+    setTimeout(() => setLinkBtnFeedback(btn, "icon"), 1200);
+  },
+  fail: (btn) => {
+    setLinkBtnFeedback(btn, "fail");
+    setTimeout(() => setLinkBtnFeedback(btn, "icon"), 1800);
+  },
+};
 
 // --- Helper: Copy ticket info with user format and feedback ---
 function copyTicketInfoToClipboard(info, statusToUse, btn) {
@@ -118,6 +128,25 @@ function setGitBtnFeedback(gitBtn, type) {
   }
 }
 
+function getLinkIconSVG() {
+  return "<svg width='25' height='25' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'><circle cx='12' cy='12' r='10' fill='white' fill-opacity='0.15'/><path d='M10 13a4 4 0 0 0 5.66 0l2-2a4 4 0 0 0-5.66-5.66l-1 1' stroke='white' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/><path d='M14 11a4 4 0 0 0-5.66 0l-2 2a4 4 0 0 0 5.66 5.66l1-1' stroke='white' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/></svg>";
+}
+
+function setLinkBtnFeedback(linkBtn, type) {
+  if (type === "copied") {
+    linkBtn.innerHTML =
+      "<span style='color:#36B37E;padding:0 10px;'>Copied!</span>";
+  } else if (type === "fail") {
+    linkBtn.innerHTML =
+      "<span style='color:#FF5630;padding:0 10px;'>Copy failed</span>";
+  } else if (type === "notfound") {
+    linkBtn.innerHTML =
+      "<span style='color:#FF5630;padding:0 10px;'>Not found</span>";
+  } else {
+    linkBtn.innerHTML = getLinkIconSVG();
+  }
+}
+
 function createGitButton(onClick) {
   const gitBtn = document.createElement("button");
   gitBtn.id = "jira-ticket-git-btn";
@@ -145,6 +174,35 @@ function createGitButton(onClick) {
   setGitBtnFeedback(gitBtn, "icon");
   gitBtn.onclick = onClick;
   return gitBtn;
+}
+
+function createLinkButton(onClick) {
+  const linkBtn = document.createElement("button");
+  linkBtn.id = "jira-ticket-link-btn";
+  linkBtn.setAttribute("aria-label", "Copy ticket link");
+  linkBtn.setAttribute("tabindex", "0");
+  Object.assign(linkBtn.style, {
+    background: "#6B778C",
+    color: "#fff",
+    border: "none",
+    borderRadius: "3px",
+    padding: "0 3px",
+    cursor: "pointer",
+    fontSize: "14px",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    height: "25px",
+    transition: "background 0.2s",
+    marginLeft: "5px",
+  });
+  linkBtn.onmouseenter = () => (linkBtn.style.background = "#42526E");
+  linkBtn.onmouseleave = () => (linkBtn.style.background = "#6B778C");
+  linkBtn.onmousedown = () => (linkBtn.style.outline = "none");
+  linkBtn.onfocus = () => (linkBtn.style.outline = "none");
+  setLinkBtnFeedback(linkBtn, "icon");
+  linkBtn.onclick = onClick;
+  return linkBtn;
 }
 
 function createDropdown(selectedStatusRef, triggerCopy) {
@@ -288,9 +346,38 @@ function injectCopyButton() {
     }
   });
 
+  const linkBtn = createLinkButton(() => {
+    const linkInfo = extractJiraTicketInfo();
+    if (!linkInfo.ticketId || !linkInfo.title) {
+      setLinkBtnFeedback(linkBtn, "notfound");
+      setTimeout(() => setLinkBtnFeedback(linkBtn, "icon"), 1800);
+      return;
+    }
+    const ticketUrl = window.location.href;
+    const doCopyLink = (format) => {
+      const linkText = formatCommitMessage(format, linkInfo);
+      const htmlContent = `<a href="${ticketUrl}">${linkText}</a>`;
+      const htmlBlob = new Blob([htmlContent], { type: "text/html" });
+      const textBlob = new Blob([linkText], { type: "text/plain" });
+      navigator.clipboard
+        .write([new ClipboardItem({ "text/html": htmlBlob, "text/plain": textBlob })])
+        .then(() => linkBtnFeedback.success(linkBtn))
+        .catch(() => linkBtnFeedback.fail(linkBtn));
+    };
+    if (chrome.storage && chrome.storage.sync) {
+      chrome.storage.sync.get(["linkFormat"], (result) => {
+        const format = result.linkFormat || "{{ticketId}}: {{title}}";
+        doCopyLink(format);
+      });
+    } else {
+      doCopyLink("{{ticketId}}: {{title}}");
+    }
+  });
+
   groupWrapper.appendChild(btn);
   groupWrapper.appendChild(dropdownWrapper);
   groupWrapper.appendChild(gitBtn);
+  groupWrapper.appendChild(linkBtn);
 
   if (idContainer && idContainer.parentNode) {
     console.log(
