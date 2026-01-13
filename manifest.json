@@ -1,14 +1,23 @@
 {
   "manifest_version": 3,
   "name": "JIRA Ticket Copier",
-  "version": "0.1.12",
+  "version": "0.1.13",
   "description": "Copy JIRA ticket info (ID, status, title) or git commit message from JIRA Cloud. Fast, reliable, and accessible.",
-  "permissions": ["clipboardWrite", "storage"],
-  "host_permissions": ["https://*.atlassian.net/*"],
+  "permissions": [
+    "clipboardWrite",
+    "storage"
+  ],
+  "host_permissions": [
+    "https://*.atlassian.net/*"
+  ],
   "content_scripts": [
     {
-      "matches": ["https://*.atlassian.net/*"],
-      "js": ["dist/content.js"],
+      "matches": [
+        "https://*.atlassian.net/*"
+      ],
+      "js": [
+        "dist/content.js"
+      ],
       "run_at": "document_idle"
     }
   ],
