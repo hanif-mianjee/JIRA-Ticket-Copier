@@ -37,11 +37,99 @@ npm install
 
 ### Project Structure
 
-- `src/` — Source code (content script, utils, icons)
-- `dist/` — Build output (content.js, icons)
-- `manifest.json` — Chrome extension manifest
-- `copy-icons.mjs` — Script to copy icons to dist/
-- `README.md`, `packaging_instructions.txt` — Documentation
+```
+src/
+├── background.js           # Service worker - install/update detection
+├── content.js              # Entry point - page detection & button injection
+├── content.test.js         # Unit tests
+├── utils.js                # Backward-compatible utility exports
+├── config/
+│   └── selectors.js        # Page configurations (selectors, buttons)
+├── core/
+│   ├── clipboard.js        # Clipboard operations & feedback
+│   └── storage.js          # Chrome storage wrapper
+├── ui/
+│   ├── buttons.js          # Button factory (all button types)
+│   ├── dropdown.js         # Status dropdown component
+│   ├── icons.js            # SVG icon definitions
+│   └── styles.js           # Colors & shared styles
+├── icons/                  # Extension icons (16, 48, 128px)
+│   ├── icon16.png
+│   ├── icon48.png
+│   └── icon128.png
+├── options/                # Extension options/settings page
+│   ├── options.html
+│   ├── options.css
+│   └── options.js
+└── welcome/                # Welcome/onboarding page
+    ├── welcome.html
+    ├── welcome.css
+    └── welcome.js
+
+copy-background.mjs         # Build script - copies background worker
+copy-icons.mjs              # Build script - copies icons to dist
+copy-options.mjs            # Build script - copies options page
+copy-welcome.mjs            # Build script - copies welcome page
+```
+
+- `dist/` — Build output (content.js, background.js, icons, options, welcome)
+- `manifest.json` — Chrome extension manifest (Manifest V3)
+- `.versionrc` — Configuration for automated versioning
+
+---
+
+## Adding Support for New JIRA Pages
+
+The extension uses a **config-driven architecture**. To add buttons to a new JIRA page, simply add an entry to `src/config/selectors.js`:
+
+### Single Page (Ticket Detail Style)
+
+```javascript
+{
+  id: "my-new-page",
+  urlPattern: /\/my-url-pattern\//,
+  selectors: {
+    ticketId: '[data-testid="..."]',     // Element containing ticket ID
+    status: '[data-testid="..."]',       // Element containing status
+    title: '[data-testid="..."]',        // Element containing title
+    container: '[data-testid="..."]',    // Parent container (fallback)
+    insertAfter: '[data-testid="..."]',  // Insert buttons after this element
+  },
+  buttons: ["copyTicketInfo", "statusDropdown", "gitButton", "linkButton"],
+  groupId: "my-unique-group-id",
+}
+```
+
+### List/Board View (Multiple Rows)
+
+```javascript
+{
+  id: "my-list-page",
+  urlPattern: /\/my-list-url\//,
+  selectors: {
+    row: '[role="row"]',                 // Row selector (triggers list mode)
+    ticketId: '[data-testid="..."]',
+    title: '[data-testid="..."]',
+    status: '[data-testid="..."]',
+    buttonContainer: '[data-testid="..."]',
+  },
+  buttons: ["listLinkButton"],
+  buttonClass: "my-list-btn-class",
+  settingKey: "enableMyListView",        // Optional: user setting to enable/disable
+}
+```
+
+### Available Buttons
+
+| Button Name | Description |
+|-------------|-------------|
+| `copyTicketInfo` | Main copy button (ticket info with status) |
+| `statusDropdown` | Dropdown to override status |
+| `gitButton` | Copy git commit message format |
+| `linkButton` | Copy as hyperlink |
+| `listLinkButton` | Compact link button for list views |
+
+**No code changes required** — just add the config entry and rebuild.
 
 ---
 
@@ -130,6 +218,58 @@ npm run package
 
 ---
 
+## Versioning & Release
+
+This project uses [standard-version](https://github.com/conventional-changelog/standard-version) for automated versioning and changelog generation.
+
+### How It Works
+
+`npm run release` automatically:
+1. Analyzes git commits since last release
+2. Determines version bump (major/minor/patch) based on conventional commits
+3. Updates version in `package.json` and `manifest.json`
+4. Generates/updates `CHANGELOG.md`
+5. Creates git commit and tag
+
+### Usage
+
+```sh
+# Automatic version bump based on commits
+npm run release
+
+# Manually specify version type
+npm run release -- --release-as minor
+npm run release -- --release-as major
+npm run release -- --release-as 1.0.0
+
+# First release
+npm run release -- --first-release
+
+# Dry run (see what would happen)
+npm run release -- --dry-run
+```
+
+### Commit Message Format
+
+Use [conventional commits](https://www.conventionalcommits.org/) for automatic versioning:
+
+- `feat: add new feature` → **minor** version bump (0.1.0 → 0.2.0)
+- `fix: bug fix` → **patch** version bump (0.1.0 → 0.1.1)
+- `BREAKING CHANGE:` or `feat!:` → **major** version bump (0.1.0 → 1.0.0)
+- `chore:`, `docs:`, `style:` → no version bump
+
+### After Release
+
+```sh
+# Push commits and tags to GitHub
+git push --follow-tags origin main
+
+# Build and package for Chrome Web Store
+npm run package
+```
+
+---
+
 ## Chrome Extension Development
 
 1. Build the extension:
@@ -156,13 +296,7 @@ npm run package
 
 ## File Structure (Summary)
 
-- `manifest.json` — Chrome extension manifest
-- `src/content.js` — Content script (injects button, handles copy, git button UI/logic)
-- `src/utils.js` — Utility functions (DOM extraction, formatting)
-- `src/icons/` — Source icons (copied to `dist/` during build)
-- `dist/` — Build output (content.js, icons)
-- `README.md` — Dev/test/packaging guide
-- `.gitignore` — Ignore dev/prod artifacts
+See [Project Structure](#project-structure) above for detailed layout.
 
 ---
 

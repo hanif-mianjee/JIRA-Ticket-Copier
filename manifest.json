@@ -10,6 +10,9 @@
   "host_permissions": [
     "https://*.atlassian.net/*"
   ],
+  "background": {
+    "service_worker": "dist/background.js"
+  },
   "content_scripts": [
     {
       "matches": [
@@ -22,7 +25,12 @@
     }
   ],
   "action": {
-    "default_title": "Copy JIRA Ticket Info"
+    "default_title": "JIRA Ticket Copier - Copy ticket info with one click",
+    "default_icon": {
+      "16": "dist/icons/icon16.png",
+      "48": "dist/icons/icon48.png",
+      "128": "dist/icons/icon128.png"
+    }
   },
   "icons": {
     "16": "dist/icons/icon16.png",
@@ -31,17 +39,5 @@
   },
   "homepage_url": "https://github.com/hanif-mianjee/JIRA-Ticket-Copier",
   "options_page": "dist/options/options.html",
-  "support_url": "https://github.com/hanif-mianjee/JIRA-Ticket-Copier/issues",
-  "keywords": [
-    "jira",
-    "ticket",
-    "copy",
-    "clipboard",
-    "commit message",
-    "git",
-    "chrome extension",
-    "atlassian",
-    "productivity",
-    "issue tracker"
-  ]
+  "minimum_chrome_version": "88"
 }

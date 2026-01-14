@@ -163,11 +163,9 @@ describe("JIRA Ticket Copier Utilities", () => {
     // Use the actual extractJiraTicketInfo from utils.js
     const { extractJiraTicketInfo } = require("./utils.js");
     const info = extractJiraTicketInfo();
-    expect(info).toEqual({
-      ticketId: "AB-1234",
-      status: "",
-      title: "Sample ticket title here",
-    });
+    expect(info.ticketId).toBe("AB-1234");
+    expect(info.status).toBe("");
+    expect(info.title).toBe("Sample ticket title here");
   });
   beforeEach(() => {
     document.body.innerHTML = `

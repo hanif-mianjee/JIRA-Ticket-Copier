@@ -7,96 +7,140 @@
     <link rel="stylesheet" href="options.css" />
   </head>
   <body>
-    <div class="options-container">
-      <h2>JIRA Ticket Copier Settings</h2>
-      <!-- Removed duplicate legacy fields and help section -->
-      <form id="optionsForm" autocomplete="off">
-        <fieldset style="border: none; padding: 0; margin: 0 0 18px 0">
-          <legend style="font-weight: bold; margin-bottom: 6px">
-            Ticket Info Button
-          </legend>
-          <label style="display: flex; align-items: center; cursor: pointer; margin-bottom: 8px;">
-            <input
-              id="enableTicketInfo"
-              type="checkbox"
-              style="margin-right: 8px;"
-            />
-            Enable Ticket Info button
-          </label>
-          <label for="ticketInfoFormat">Format:</label>
-          <input
-            id="ticketInfoFormat"
-            type="text"
-            placeholder="e.g. {{ticketId}}: {{status}} - {{title}}"
-            aria-describedby="varsHelp"
-          />
-        </fieldset>
-        <fieldset style="border: none; padding: 0; margin: 0 0 18px 0">
-          <legend style="font-weight: bold; margin-bottom: 6px">
-            Git Button
-          </legend>
-          <label style="display: flex; align-items: center; cursor: pointer; margin-bottom: 8px;">
-            <input
-              id="enableGitButton"
-              type="checkbox"
-              style="margin-right: 8px;"
-            />
-            Enable Git button
-          </label>
-          <label for="commitFormat">Format:</label>
-          <input
-            id="commitFormat"
-            type="text"
-            placeholder="e.g. {{ticketId}}: {{title}}"
-            aria-describedby="varsHelp"
-          />
-        </fieldset>
-        <fieldset style="border: none; padding: 0; margin: 0 0 18px 0">
-          <legend style="font-weight: bold; margin-bottom: 6px">
-            Link Button
-          </legend>
-          <label style="display: flex; align-items: center; cursor: pointer; margin-bottom: 8px;">
-            <input
-              id="enableLinkButton"
-              type="checkbox"
-              style="margin-right: 8px;"
-            />
-            Enable Link button
-          </label>
-          <label for="linkFormat">Format:</label>
-          <input
-            id="linkFormat"
-            type="text"
-            placeholder="e.g. {{ticketId}}: {{title}}"
-            aria-describedby="varsHelp"
-          />
-        </fieldset>
-        <fieldset style="border: none; padding: 0; margin: 0 0 18px 0">
-          <legend style="font-weight: bold; margin-bottom: 6px">
-            List View
-          </legend>
-          <label style="display: flex; align-items: center; cursor: pointer;">
-            <input
-              id="enableListView"
-              type="checkbox"
-              style="margin-right: 8px;"
-            />
-            Enable copy buttons on list/board views
-          </label>
-        </fieldset>
-        <div
-          id="varsHelp"
-          class="help-text"
-          style="font-size: 0.97em; color: #6b778c; margin-bottom: 10px"
-        >
-          <strong>Available variables:</strong><br />
-          <code>{{ticketId}}</code> – JIRA ticket key<br />
-          <code>{{title}}</code> – Ticket title<br />
-          <code>{{status}}</code> – Ticket status
+    <div class="container">
+      <header class="header">
+        <div class="header-content">
+          <img src="../icons/icon48.png" alt="JIRA Ticket Copier" class="header-icon" />
+          <h1>JIRA Ticket Copier</h1>
+          <p class="version">v<span id="version"></span></p>
         </div>
-        <button id="saveBtn" type="submit">Save</button>
-        <span id="status" role="status" aria-live="polite"></span>
+      </header>
+
+      <form id="optionsForm" autocomplete="off">
+        <section class="settings-section">
+          <div class="section-header">
+            <h2>Ticket Info Button</h2>
+            <label class="toggle-switch">
+              <input id="enableTicketInfo" type="checkbox" />
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+          
+          <div class="form-group">
+            <label for="ticketInfoFormat" class="form-label">Format Template</label>
+            <input
+              id="ticketInfoFormat"
+              type="text"
+              class="form-input"
+              placeholder="e.g. {{ticketId}}: {{status}} - {{title}}"
+              aria-describedby="ticketInfoPreview"
+            />
+            <div id="ticketInfoPreview" class="preview-box"></div>
+          </div>
+
+          <div class="form-group">
+            <label for="statusList" class="form-label">Status Dropdown Options</label>
+            <textarea
+              id="statusList"
+              rows="6"
+              class="form-textarea"
+              placeholder="One status per line, e.g.:
+In Progress
+In Review
+Blocked"
+            >Waiting for Input
+Analysis
+Analysis/Comment added
+Blocked
+Blocked/Comment added
+Blocked/Waiting for Input
+In Review
+PR Raised
+Review suggestions applied</textarea>
+            <div class="help-text">One status per line. Leave empty for defaults.</div>
+          </div>
+        </section>
+
+        <section class="settings-section">
+          <div class="section-header">
+            <h2>Git Button</h2>
+            <label class="toggle-switch">
+              <input id="enableGitButton" type="checkbox" />
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+          
+          <div class="form-group">
+            <label for="commitFormat" class="form-label">Commit Message Format</label>
+            <input
+              id="commitFormat"
+              type="text"
+              class="form-input"
+              placeholder="e.g. {{ticketId}}: {{title}}"
+              aria-describedby="commitFormatPreview"
+            />
+            <div id="commitFormatPreview" class="preview-box"></div>
+          </div>
+        </section>
+
+        <section class="settings-section">
+          <div class="section-header">
+            <h2>Link Button</h2>
+            <label class="toggle-switch">
+              <input id="enableLinkButton" type="checkbox" />
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+          
+          <div class="form-group">
+            <label for="linkFormat" class="form-label">Link Format</label>
+            <input
+              id="linkFormat"
+              type="text"
+              class="form-input"
+              placeholder="e.g. {{ticketId}}: {{title}}"
+              aria-describedby="linkFormatPreview"
+            />
+            <div id="linkFormatPreview" class="preview-box"></div>
+          </div>
+        </section>
+
+        <section class="settings-section">
+          <div class="section-header">
+            <h2>List View</h2>
+            <label class="toggle-switch">
+              <input id="enableListView" type="checkbox" />
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+          <div class="help-text">Enable copy buttons on JIRA list and board views</div>
+        </section>
+
+        <div class="variables-info">
+          <h3>Available Variables</h3>
+          <div class="variables-grid" id="variablesGrid">
+            <!-- Variables will be dynamically generated here -->
+          </div>
+        </div>
+
+        <div class="button-group">
+          <button id="saveBtn" type="submit" class="btn-primary">Save Settings</button>
+          <div class="success-message" id="successMessage" role="status" aria-live="polite">
+            Settings saved successfully!
+          </div>
+        </div>
       </form>
+
+      <footer class="footer">
+        <p>Made with ❤️ by Hanif Mianjee</p>
+        <div class="footer-links">
+          <button id="openWelcome" class="link-button">Welcome Page</button>
+          <span>•</span>
+          <a href="https://github.com/hanif-mianjee/JIRA-Ticket-Copier/issues" target="_blank">Report Issue</a>
+          <span>•</span>
+          <a href="https://github.com/hanif-mianjee/JIRA-Ticket-Copier" target="_blank">Documentation</a>
+        </div>
+      </footer>
     </div>
     <script src="options.js"></script>
   </body>
