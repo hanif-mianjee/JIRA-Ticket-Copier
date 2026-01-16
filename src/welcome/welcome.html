@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Welcome to JIRA Ticket Copier</title>
+    <link rel="stylesheet" href="welcome.css" />
+  </head>
+  <body>
+    <div class="container">
+      <header class="header">
+        <img src="../icons/icon128.png" alt="JIRA Ticket Copier" class="logo" />
+        <h1>Welcome to JIRA Ticket Copier!</h1>
+        <p class="version">Version <span id="version"></span></p>
+      </header>
+
+      <main class="content">
+        <section class="hero">
+          <h2>Thank you for installing! 🎉</h2>
+          <p>JIRA Ticket Copier helps you boost productivity by quickly copying JIRA ticket information with just one click.</p>
+        </section>
+
+        <section class="features">
+          <h3>Key Features</h3>
+          <div class="feature-grid">
+            <div class="feature-card">
+              <div class="feature-icon">📋</div>
+              <h4>Ticket Info Button</h4>
+              <p>Copy ticket details with custom format including ID, status, and title</p>
+            </div>
+            <div class="feature-card">
+              <div class="feature-icon">🔀</div>
+              <h4>Git Commit Message</h4>
+              <p>Generate perfectly formatted commit messages from JIRA tickets</p>
+            </div>
+            <div class="feature-card">
+              <div class="feature-icon">🔗</div>
+              <h4>Quick Links</h4>
+              <p>Copy formatted ticket links for sharing and documentation</p>
+            </div>
+            <div class="feature-card">
+              <div class="feature-icon">⚡</div>
+              <h4>List View Support</h4>
+              <p>Copy buttons directly on JIRA board and list views</p>
+            </div>
+          </div>
+        </section>
+
+        <section class="getting-started">
+          <h3>Getting Started</h3>
+          <ol class="steps">
+            <li>
+              <strong>Navigate to any JIRA ticket</strong>
+              <p>Open any ticket on your JIRA Cloud instance (*.atlassian.net)</p>
+            </li>
+            <li>
+              <strong>Find the copy buttons</strong>
+              <p>Look for the integrated buttons in the JIRA ticket header</p>
+            </li>
+            <li>
+              <strong>Customize your settings</strong>
+              <p>Click the button below to configure formats and enable/disable features</p>
+            </li>
+          </ol>
+        </section>
+
+        <section class="actions">
+          <button id="openSettings" class="btn-primary">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="3"></circle>
+              <path d="M12 1v6m0 6v6m-8-7h6m6 0h6m-4.22-4.22l-4.24 4.24m0 0l-4.24 4.24m8.48 0l-4.24-4.24"></path>
+            </svg>
+            Open Settings
+          </button>
+          <a href="https://github.com/hanif-mianjee/JIRA-Ticket-Copier" target="_blank" class="btn-secondary">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+            </svg>
+            View on GitHub
+          </a>
+        </section>
+
+        <section class="tips">
+          <h3>Pro Tips</h3>
+          <ul>
+            <li>Use the status dropdown to override ticket status before copying</li>
+            <li>Customize format templates with variables: <code>{{ticketId}}</code>, <code>{{title}}</code>, <code>{{status}}</code></li>
+            <li>Enable/disable individual buttons based on your workflow</li>
+            <li>All settings are synced across your Chrome browsers</li>
+          </ul>
+        </section>
+      </main>
+
+      <footer class="footer">
+        <p>Made with ❤️ by Hanif Mianjee</p>
+        <div class="footer-links">
+          <a href="https://github.com/hanif-mianjee/JIRA-Ticket-Copier/issues" target="_blank">Report Issue</a>
+          <span>•</span>
+          <a href="https://github.com/hanif-mianjee/JIRA-Ticket-Copier" target="_blank">Documentation</a>
+          <span>•</span>
+          <button id="openSettingsFooter" class="link-button">Settings</button>
+        </div>
+      </footer>
+    </div>
+    <script src="welcome.js"></script>
+  </body>
+</html>

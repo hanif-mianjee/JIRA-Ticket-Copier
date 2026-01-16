@@ -1,554 +1,113 @@
-// --- Helper: Copy to clipboard and show feedback for main button ---
-// --- Helper: Copy ticket info with user format and feedback ---
-// --- Generalized Helper: Copy to clipboard and show feedback ---
-function copyToClipboardWithFeedback(text, btn, feedback) {
-  navigator.clipboard
-    .writeText(text)
-    .then(() => feedback.success(btn))
-    .catch(() => feedback.fail(btn));
-}
-
-// --- Feedback strategies ---
-const mainBtnFeedback = {
-  success: (btn) => {
-    btn.textContent = "Copied!";
-    setTimeout(() => {
-      btn.textContent = "Copy Ticket Info";
-    }, 1200);
-  },
-  fail: (btn) => {
-    btn.textContent = "Copy failed";
-    btn.style.background = COLORS.error;
-    setTimeout(() => {
-      btn.textContent = "Copy Ticket Info";
-      btn.style.background = COLORS.buttonBgActive;
-    }, 1800);
-  },
-};
-const gitBtnFeedback = {
-  success: (btn) => {
-    setGitBtnFeedback(btn, "copied");
-    setTimeout(() => setGitBtnFeedback(btn, "icon"), 1200);
-  },
-  fail: (btn) => {
-    setGitBtnFeedback(btn, "fail");
-    setTimeout(() => setGitBtnFeedback(btn, "icon"), 1800);
-  },
-};
-const linkBtnFeedback = {
-  success: (btn) => {
-    setLinkBtnFeedback(btn, "copied");
-    setTimeout(() => setLinkBtnFeedback(btn, "icon"), 1200);
-  },
-  fail: (btn) => {
-    setLinkBtnFeedback(btn, "fail");
-    setTimeout(() => setLinkBtnFeedback(btn, "icon"), 1800);
-  },
-};
-
-// --- Helper: Copy ticket info with user format and feedback ---
-function copyTicketInfoToClipboard(info, statusToUse, btn) {
-  // Defensive: Only copy if ticketId and status are valid
-  if (!info.ticketId || !info.title) {
-    mainBtnFeedback.fail(btn);
-    return;
-  }
-  if (!statusToUse) {
-    btn.textContent = "Status not found";
-    btn.style.background = COLORS.error;
-    setTimeout(() => {
-      btn.textContent = "Copy Ticket Info";
-      btn.style.background = COLORS.buttonBgActive;
-    }, 1800);
-    return;
-  }
-  const doCopy = (format) => {
-    const formatted = formatCommitMessage(format, {
-      ticketId: info.ticketId,
-      status: statusToUse,
-      title: info.title,
-    });
-    copyToClipboardWithFeedback(formatted, btn, mainBtnFeedback);
-  };
-  if (chrome.storage && chrome.storage.sync) {
-    chrome.storage.sync.get(["ticketInfoFormat"], (result) => {
-      const format =
-        result.ticketInfoFormat || "{{ticketId}}: {{status}} - {{title}}";
-      doCopy(format);
-    });
-  } else {
-    doCopy("{{ticketId}}: {{status}} - {{title}}");
-  }
-}
-// --- Helper: Format commit message with variables ---
-function formatCommitMessage(format, info) {
-  return format
-    .replace(/{{\s*ticketId\s*}}/g, info.ticketId)
-    .replace(/{{\s*title\s*}}/g, info.title)
-    .replace(/{{\s*status\s*}}/g, info.status);
-}
-
-// --- Helper: Copy to clipboard and show feedback ---
-import {
-  COLORS,
-  STATUS_LIST,
-  getJiraElements,
-  extractJiraTicketInfo,
-  formatJiraString,
-  setButtonStyle,
-  setDropdownItemStyle,
-} from "./utils.js";
+import { PAGE_CONFIGS } from "./config/selectors.js";
+import { getSetting } from "./core/storage.js";
+import { copyTicketInfo, mainButtonFeedback } from "./core/clipboard.js";
+import { createCopyButton, createGitButton, createLinkButton, createListLinkButton } from "./ui/buttons.js";
+import { createDropdown } from "./ui/dropdown.js";
 
 console.log("[JIRA Ticket Copier] Content script loaded");
-// Content script for JIRA Ticket Copier
-// Injects a button into JIRA ticket pages to copy ticket info to clipboard
 
-/**
- * Extracts JIRA ticket info (ID, status, title) from the DOM.
- * @returns {Object} { ticketId, status, title }
- */
+function extractInfo(selectors, context = document) {
+  const ticketEl = context.querySelector(selectors.ticketId);
+  const statusEl = context.querySelector(selectors.status);
+  const titleEl = context.querySelector(selectors.title);
 
-// --- Utility: Git Button Feedback ---
-function getGitIconSVG() {
-  return "<svg width=\"25\" height=\"25\" viewBox=\"0 0 24 24\" fill=\"none\" xmlns=\"http://www.w3.org/2000/svg\"><circle cx=\"12\" cy=\"12\" r=\"10\" fill=\"white\" fill-opacity=\"0.15\"/><path d=\"M17.561 10.438l-3.999-3.999a1.5 1.5 0 0 0-2.122 0l-1.001 1.001 1.415 1.415a1 1 0 1 1 1.414 1.414l-0.707 0.707a1 1 0 1 1-1.414-1.414l-1.415-1.415-2.001 2.001a1.5 1.5 0 0 0 0 2.122l3.999 3.999a1.5 1.5 0 0 0 2.122 0l3.999-3.999a1.5 1.5 0 0 0 0-2.122z\" fill=\"white\"/></svg>";
-}
+  let status = statusEl?.textContent?.trim() || "";
+  if (/[{}]/.test(status)) status = "";
 
-function setGitBtnFeedback(gitBtn, type) {
-  if (type === "copied") {
-    gitBtn.innerHTML =
-      "<span style='color:#36B37E;padding:0 10px;'>Copied!</span>";
-  } else if (type === "fail") {
-    gitBtn.innerHTML =
-      "<span style='color:#FF5630;padding:0 10px;'>Copy failed</span>";
-  } else if (type === "notfound") {
-    gitBtn.innerHTML =
-      "<span style='color:#FF5630;padding:0 10px;'>Not found</span>";
-  } else {
-    gitBtn.innerHTML = getGitIconSVG();
-  }
-}
+  const ticketId = ticketEl?.textContent?.trim() || "";
+  const title = titleEl?.textContent?.trim() || "";
 
-function getLinkIconSVG() {
-  return "<svg width='25' height='25' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'><circle cx='12' cy='12' r='10' fill='white' fill-opacity='0.15'/><path d='M10 13a4 4 0 0 0 5.66 0l2-2a4 4 0 0 0-5.66-5.66l-1 1' stroke='white' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/><path d='M14 11a4 4 0 0 0-5.66 0l-2 2a4 4 0 0 0 5.66 5.66l1-1' stroke='white' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/></svg>";
-}
-
-function setLinkBtnFeedback(linkBtn, type) {
-  if (type === "copied") {
-    linkBtn.innerHTML =
-      "<span style='color:#36B37E;padding:0 10px;'>Copied!</span>";
-  } else if (type === "fail") {
-    linkBtn.innerHTML =
-      "<span style='color:#FF5630;padding:0 10px;'>Copy failed</span>";
-  } else if (type === "notfound") {
-    linkBtn.innerHTML =
-      "<span style='color:#FF5630;padding:0 10px;'>Not found</span>";
-  } else {
-    linkBtn.innerHTML = getLinkIconSVG();
-  }
-}
-
-function createGitButton(onClick) {
-  const gitBtn = document.createElement("button");
-  gitBtn.id = "jira-ticket-git-btn";
-  gitBtn.setAttribute("aria-label", "Copy git commit message");
-  gitBtn.setAttribute("tabindex", "0");
-  Object.assign(gitBtn.style, {
-    background: "#6B778C",
-    color: "#fff",
-    border: "none",
-    borderRadius: "3px",
-    padding: "0 3px",
-    cursor: "pointer",
-    fontSize: "14px",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    height: "25px",
-    transition: "background 0.2s",
-    marginLeft: "5px",
-  });
-  gitBtn.onmouseenter = () => (gitBtn.style.background = "#42526E");
-  gitBtn.onmouseleave = () => (gitBtn.style.background = "#6B778C");
-  gitBtn.onmousedown = () => (gitBtn.style.outline = "none");
-  gitBtn.onfocus = () => (gitBtn.style.outline = "none");
-  setGitBtnFeedback(gitBtn, "icon");
-  gitBtn.onclick = onClick;
-  return gitBtn;
-}
-
-function createLinkButton(onClick) {
-  const linkBtn = document.createElement("button");
-  linkBtn.id = "jira-ticket-link-btn";
-  linkBtn.setAttribute("aria-label", "Copy ticket link");
-  linkBtn.setAttribute("tabindex", "0");
-  Object.assign(linkBtn.style, {
-    background: "#6B778C",
-    color: "#fff",
-    border: "none",
-    borderRadius: "3px",
-    padding: "0 3px",
-    cursor: "pointer",
-    fontSize: "14px",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    height: "25px",
-    transition: "background 0.2s",
-    marginLeft: "5px",
-  });
-  linkBtn.onmouseenter = () => (linkBtn.style.background = "#42526E");
-  linkBtn.onmouseleave = () => (linkBtn.style.background = "#6B778C");
-  linkBtn.onmousedown = () => (linkBtn.style.outline = "none");
-  linkBtn.onfocus = () => (linkBtn.style.outline = "none");
-  setLinkBtnFeedback(linkBtn, "icon");
-  linkBtn.onclick = onClick;
-  return linkBtn;
-}
-
-function createDropdown(selectedStatusRef, triggerCopy) {
-  const dropdownWrapper = document.createElement("div");
-  dropdownWrapper.id = "jira-ticket-status-dropdown-wrapper";
-  dropdownWrapper.style.display = "inline-block";
-  dropdownWrapper.style.position = "relative";
-  dropdownWrapper.style.fontSize = "13px";
-
-  const dropdownBtn = document.createElement("button");
-  dropdownBtn.innerHTML = "<span>&#9660;</span>";
-  dropdownBtn.setAttribute("aria-label", "Select status");
-  setButtonStyle(dropdownBtn, false);
-
-  const dropdownMenu = document.createElement("div");
-  Object.assign(dropdownMenu.style, {
-    display: "none",
-    position: "absolute",
-    top: "110%",
-    right: "0",
-    background: COLORS.dropdownBg,
-    border: "1px solid #ccc",
-    borderRadius: "3px",
-    boxShadow: "0 2px 8px rgba(0,0,0,0.12)",
-    zIndex: "9999999",
-    minWidth: "160px",
-    overflow: "hidden",
-  });
-
-  const defaultItem = document.createElement("div");
-  defaultItem.textContent = "(Status from page)";
-  setDropdownItemStyle(defaultItem, true);
-  defaultItem.onclick = () => {
-    selectedStatusRef.value = null;
-    dropdownMenu.style.display = "none";
-    triggerCopy();
-  };
-  dropdownMenu.appendChild(defaultItem);
-
-  STATUS_LIST.forEach((status) => {
-    const item = document.createElement("div");
-    item.textContent = status;
-    setDropdownItemStyle(item);
-    item.onclick = () => {
-      selectedStatusRef.value = status;
-      dropdownMenu.style.display = "none";
-      triggerCopy();
-    };
-    dropdownMenu.appendChild(item);
-  });
-
-  dropdownBtn.onclick = (e) => {
-    e.stopPropagation();
-    dropdownMenu.style.display =
-      dropdownMenu.style.display === "none" ? "block" : "none";
-  };
-  document.addEventListener("click", () => {
-    dropdownMenu.style.display = "none";
-  });
-
-  dropdownWrapper.appendChild(dropdownBtn);
-  dropdownWrapper.appendChild(dropdownMenu);
-  return dropdownWrapper;
-}
-
-function createCopyButton(triggerCopy) {
-  const btn = document.createElement("button");
-  btn.id = "jira-ticket-copy-btn";
-  btn.textContent = "Copy Ticket Info";
-  btn.setAttribute("aria-label", "Copy JIRA ticket info to clipboard");
-  btn.setAttribute("tabindex", "0");
-  setButtonStyle(btn, true);
-  btn.onclick = triggerCopy;
-  return btn;
-}
-
-function injectCopyButton() {
-  if (document.getElementById("jira-ticket-copier-group")) {
-    console.log("[JIRA Ticket Copier] Button group already exists");
-    return;
-  }
-  const { jiraStatusWrapper, idContainer } = getJiraElements();
-  if (!jiraStatusWrapper) {
-    console.warn("[JIRA Ticket Copier] JIRA Status Wrapper not found");
-    return;
+  let ticketUrl = window.location.href;
+  if (ticketEl?.getAttribute("href")) {
+    ticketUrl = `${window.location.origin}${ticketEl.getAttribute("href")}`;
   }
 
-  // Only inject if status is loaded and valid
-  const info = extractJiraTicketInfo();
-  if (!info.status) {
-    console.log("[JIRA Ticket Copier] Status not loaded, not injecting button");
-    return;
-  }
+  return { ticketId, status, title, ticketUrl };
+}
+
+const BUTTON_CREATORS = {
+  copyTicketInfo: (getInfo, selectedStatus) => createCopyButton(getInfo, selectedStatus),
+  statusDropdown: (getInfo, selectedStatus, triggerCopy) => createDropdown(selectedStatus, triggerCopy),
+  gitButton: (getInfo) => createGitButton(getInfo),
+  linkButton: (getInfo) => createLinkButton(getInfo),
+  listLinkButton: (getInfo) => createListLinkButton(getInfo),
+};
+
+function createButtonGroup(config, getInfo, parent) {
+  const group = document.createElement("div");
+  group.id = config.groupId;
+  Object.assign(group.style, { marginLeft: "8px", display: "inline-flex", alignItems: "center" });
+  parent.appendChild(group);
 
   const selectedStatus = { value: null };
-
-  // --- Copy logic ---
-  function triggerCopy() {
-    const info = extractJiraTicketInfo();
-    const statusToUse = selectedStatus.value || info.status;
+  const triggerCopy = () => {
     const btn = document.getElementById("jira-ticket-copy-btn");
-    if (!info.ticketId || !statusToUse || !info.title) {
-      btn.textContent = "Ticket info not found";
-      btn.style.background = COLORS.error;
-      setTimeout(() => {
-        btn.textContent = "Copy Ticket Info";
-        btn.style.background = COLORS.buttonBgActive;
-      }, 1800);
-      return;
-    }
-    copyTicketInfoToClipboard(info, statusToUse, btn);
-  }
-
-  // --- UI assembly ---
-  const groupWrapper = document.createElement("div");
-  groupWrapper.id = "jira-ticket-copier-group";
-  groupWrapper.style.marginLeft = "8px";
-  groupWrapper.style.display = "inline-flex";
-  groupWrapper.style.alignItems = "center";
-
-  // Append group wrapper immediately to prevent race conditions with MutationObserver
-  if (idContainer && idContainer.parentNode) {
-    console.log(
-      "[JIRA Ticket Copier] Ticket ID element found, inserting dropdown and button after it"
-    );
-    idContainer.parentNode.appendChild(groupWrapper);
-  } else {
-    console.warn(
-      "[JIRA Ticket Copier] Ticket ID element not found, appending dropdown and button to header"
-    );
-    jiraStatusWrapper.parentNode.appendChild(groupWrapper);
-  }
-
-  const btn = createCopyButton(triggerCopy);
-  const dropdownWrapper = createDropdown(selectedStatus, triggerCopy);
-  const gitBtn = createGitButton(() => {
-    const gitInfo = extractJiraTicketInfo();
-    if (!gitInfo.ticketId || !gitInfo.title) {
-      setGitBtnFeedback(gitBtn, "notfound");
-      setTimeout(() => setGitBtnFeedback(gitBtn, "icon"), 1800);
-      return;
-    }
-    const doCopy = (format) => {
-      const commitMsg = formatCommitMessage(format, gitInfo);
-      copyToClipboardWithFeedback(commitMsg, gitBtn, gitBtnFeedback);
-    };
-    if (chrome.storage && chrome.storage.sync) {
-      chrome.storage.sync.get(["commitFormat"], (result) => {
-        const format = result.commitFormat || "{{ticketId}}: {{title}}";
-        doCopy(format);
-      });
-    } else {
-      doCopy("{{ticketId}}: {{title}}");
-    }
-  });
-
-  const linkBtn = createLinkButton(() => {
-    const linkInfo = extractJiraTicketInfo();
-    if (!linkInfo.ticketId || !linkInfo.title) {
-      setLinkBtnFeedback(linkBtn, "notfound");
-      setTimeout(() => setLinkBtnFeedback(linkBtn, "icon"), 1800);
-      return;
-    }
-    const ticketUrl = window.location.href;
-    const doCopyLink = (format) => {
-      const linkText = formatCommitMessage(format, linkInfo);
-      const htmlContent = `<a href="${ticketUrl}">${linkText}</a>`;
-      const htmlBlob = new Blob([htmlContent], { type: "text/html" });
-      const textBlob = new Blob([linkText], { type: "text/plain" });
-      navigator.clipboard
-        .write([new ClipboardItem({ "text/html": htmlBlob, "text/plain": textBlob })])
-        .then(() => linkBtnFeedback.success(linkBtn))
-        .catch(() => linkBtnFeedback.fail(linkBtn));
-    };
-    if (chrome.storage && chrome.storage.sync) {
-      chrome.storage.sync.get(["linkFormat"], (result) => {
-        const format = result.linkFormat || "{{ticketId}}: {{title}}";
-        doCopyLink(format);
-      });
-    } else {
-      doCopyLink("{{ticketId}}: {{title}}");
-    }
-  });
-
-  // Conditionally append buttons based on settings
-  const appendButtons = (settings) => {
-    if (settings.enableTicketInfo !== false) {
-      groupWrapper.appendChild(btn);
-      groupWrapper.appendChild(dropdownWrapper);
-    }
-    if (settings.enableGitButton !== false) {
-      groupWrapper.appendChild(gitBtn);
-    }
-    if (settings.enableLinkButton !== false) {
-      groupWrapper.appendChild(linkBtn);
-    }
+    copyTicketInfo(getInfo(), selectedStatus.value, btn, mainButtonFeedback);
   };
 
-  if (chrome.storage && chrome.storage.sync) {
-    chrome.storage.sync.get(["enableTicketInfo", "enableGitButton", "enableLinkButton"], (result) => {
-      appendButtons(result);
-    });
-  } else {
-    appendButtons({});
-  }
-}
-
-function observeJiraPage() {
-  injectCopyButton();
-  const observer = new MutationObserver(() => {
-    injectCopyButton();
-  });
-  observer.observe(document.body, { childList: true, subtree: true });
-}
-
-// --- List View Support ---
-function extractListRowInfo(row) {
-  const keyLink = row.querySelector("[data-testid=\"business-list.ui.list-view.key-cell.issue-key\"]");
-  const summaryEl = row.querySelector("[data-testid=\"business-list.ui.list-view.summary-cell\"]");
-  const statusContainer = row.querySelector("[data-testid=\"business-list.ui.list-view.status-cell.cell-container\"]");
-
-  const ticketId = keyLink?.textContent?.trim() || "";
-  const baseUrl = window.location.origin;
-  const ticketUrl = keyLink ? `${baseUrl}${keyLink.getAttribute("href")}` : "";
-  const title = summaryEl?.textContent?.trim() || "";
-  const status = statusContainer?.textContent?.trim() || "";
-
-  return { ticketId, ticketUrl, title, status };
-}
-
-function createListRowCopyButton(row) {
-  const btn = document.createElement("button");
-  btn.className = "jira-list-copy-link-btn";
-  btn.setAttribute("aria-label", "Copy ticket link");
-  btn.setAttribute("tabindex", "0");
-  Object.assign(btn.style, {
-    background: "#6B778C",
-    color: "#fff",
-    border: "none",
-    borderRadius: "3px",
-    padding: "0 4px",
-    cursor: "pointer",
-    fontSize: "12px",
-    display: "inline-flex",
-    alignItems: "center",
-    justifyContent: "center",
-    height: "20px",
-    width: "20px",
-    transition: "background 0.2s",
-    marginLeft: "6px",
-    flexShrink: "0",
-  });
-  btn.onmouseenter = () => (btn.style.background = "#42526E");
-  btn.onmouseleave = () => (btn.style.background = "#6B778C");
-  btn.innerHTML = "<svg width='14' height='14' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'><path d='M10 13a4 4 0 0 0 5.66 0l2-2a4 4 0 0 0-5.66-5.66l-1 1' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/><path d='M14 11a4 4 0 0 0-5.66 0l-2 2a4 4 0 0 0 5.66 5.66l1-1' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/></svg>";
-
-  btn.onclick = (e) => {
-    e.stopPropagation();
-    e.preventDefault();
-    const info = extractListRowInfo(row);
-    if (!info.ticketId || !info.title) {
-      btn.innerHTML = "<span style='color:#FF5630;font-size:10px;'>!</span>";
-      setTimeout(() => {
-        btn.innerHTML = "<svg width='14' height='14' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'><path d='M10 13a4 4 0 0 0 5.66 0l2-2a4 4 0 0 0-5.66-5.66l-1 1' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/><path d='M14 11a4 4 0 0 0-5.66 0l-2 2a4 4 0 0 0 5.66 5.66l1-1' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/></svg>";
-      }, 1500);
-      return;
-    }
-
-    const doCopyLink = (format) => {
-      const linkText = formatCommitMessage(format, info);
-      const htmlContent = `<a href="${info.ticketUrl}">${linkText}</a>`;
-      const htmlBlob = new Blob([htmlContent], { type: "text/html" });
-      const textBlob = new Blob([linkText], { type: "text/plain" });
-      navigator.clipboard
-        .write([new ClipboardItem({ "text/html": htmlBlob, "text/plain": textBlob })])
-        .then(() => {
-          btn.innerHTML = "<span style='color:#36B37E;font-size:10px;'>✓</span>";
-          setTimeout(() => {
-            btn.innerHTML = "<svg width='14' height='14' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'><path d='M10 13a4 4 0 0 0 5.66 0l2-2a4 4 0 0 0-5.66-5.66l-1 1' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/><path d='M14 11a4 4 0 0 0-5.66 0l-2 2a4 4 0 0 0 5.66 5.66l1-1' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/></svg>";
-          }, 1200);
-        })
-        .catch(() => {
-          btn.innerHTML = "<span style='color:#FF5630;font-size:10px;'>✗</span>";
-          setTimeout(() => {
-            btn.innerHTML = "<svg width='14' height='14' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'><path d='M10 13a4 4 0 0 0 5.66 0l2-2a4 4 0 0 0-5.66-5.66l-1 1' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/><path d='M14 11a4 4 0 0 0-5.66 0l-2 2a4 4 0 0 0 5.66 5.66l1-1' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/></svg>";
-          }, 1500);
-        });
-    };
-
-    if (chrome.storage && chrome.storage.sync) {
-      chrome.storage.sync.get(["linkFormat"], (result) => {
-        const format = result.linkFormat || "{{ticketId}}: {{title}}";
-        doCopyLink(format);
-      });
-    } else {
-      doCopyLink("{{ticketId}}: {{title}}");
-    }
-  };
-
-  return btn;
-}
-
-function injectListViewButtons() {
-  const summarySelector = "[data-testid=\"business-list.ui.list-view.summary-cell\"]";
-  const summaryCells = document.querySelectorAll(summarySelector);
-
-  summaryCells.forEach((summaryCell) => {
-    const row = summaryCell.closest("[role=\"row\"], .BaseTable__row");
-    if (!row) return;
-    if (row.querySelector(".jira-list-copy-link-btn")) return;
-
-    const cellWrapper = summaryCell.closest("[data-testid=\"business-list.ui.list-view.text-cell.text-cell-wrapper\"]");
-    if (cellWrapper) {
-      cellWrapper.style.display = "flex";
-      cellWrapper.style.alignItems = "center";
-      cellWrapper.style.justifyContent = "space-between";
-      const copyBtn = createListRowCopyButton(row);
-      cellWrapper.appendChild(copyBtn);
+  config.buttons.forEach((buttonName) => {
+    const creator = BUTTON_CREATORS[buttonName];
+    if (creator) {
+      const btn = creator(getInfo, selectedStatus, triggerCopy);
+      group.appendChild(btn);
     }
   });
 }
 
-function observeListPage() {
-  injectListViewButtons();
-  const observer = new MutationObserver(() => {
-    injectListViewButtons();
-  });
-  observer.observe(document.body, { childList: true, subtree: true });
+function injectSinglePageButtons(config) {
+  if (document.getElementById(config.groupId)) return;
+
+  const container = document.querySelector(config.selectors.container);
+  if (!container) return;
+
+  const info = extractInfo(config.selectors);
+  if (!info.status) return;
+
+  const insertAfter = document.querySelector(config.selectors.insertAfter);
+  const parent = insertAfter?.parentNode || container.parentNode;
+  const getInfo = () => extractInfo(config.selectors);
+
+  createButtonGroup(config, getInfo, parent);
 }
 
-// --- Page Detection and Initialization ---
-const isTicketPage = /\/browse\//.test(window.location.href) || /\/issues\//.test(window.location.href);
-const isListPage = /\/jira\/software\//.test(window.location.href);
+function injectListButtons(config) {
+  const rows = document.querySelectorAll(config.selectors.row);
 
-if (isTicketPage) {
-  observeJiraPage();
-}
+  rows.forEach((row) => {
+    if (row.querySelector(`.${config.buttonClass}`)) return;
 
-if (isListPage) {
-  if (chrome.storage && chrome.storage.sync) {
-    chrome.storage.sync.get(["enableListView"], (result) => {
-      if (result.enableListView !== false) {
-        observeListPage();
+    const buttonContainer = row.querySelector(config.selectors.buttonContainer);
+    if (!buttonContainer) return;
+
+    Object.assign(buttonContainer.style, { display: "flex", alignItems: "center", justifyContent: "space-between" });
+
+    const getInfo = () => extractInfo(config.selectors, row);
+
+    config.buttons.forEach((buttonName) => {
+      if (buttonName === "listLinkButton") {
+        buttonContainer.appendChild(createListLinkButton(getInfo));
       }
     });
-  } else {
-    observeListPage();
-  }
+  });
 }
+
+function observePage(config, injectFn) {
+  injectFn(config);
+  const observer = new MutationObserver(() => injectFn(config));
+  observer.observe(document.body, { childList: true, subtree: true });
+}
+
+PAGE_CONFIGS.forEach((config) => {
+  if (!config.urlPattern.test(window.location.href)) return;
+
+  const isListView = !!config.selectors.row;
+  const injectFn = isListView ? injectListButtons : injectSinglePageButtons;
+
+  if (config.settingKey) {
+    getSetting(config.settingKey).then((enabled) => {
+      if (enabled) observePage(config, injectFn);
+    });
+  } else {
+    observePage(config, injectFn);
+  }
+});

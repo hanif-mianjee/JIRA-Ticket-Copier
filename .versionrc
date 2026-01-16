@@ -1,3 +1,23 @@
 {
-  "releaseCommitMessageFormat": "v{{currentTag}}"
+  "releaseCommitMessageFormat": "v{{currentTag}}",
+  "bumpFiles": [
+    {
+      "filename": "package.json",
+      "type": "json"
+    },
+    {
+      "filename": "manifest.json",
+      "type": "json"
+    }
+  ],
+  "packageFiles": [
+    {
+      "filename": "package.json",
+      "type": "json"
+    },
+    {
+      "filename": "manifest.json",
+      "type": "json"
+    }
+  ]
 }
