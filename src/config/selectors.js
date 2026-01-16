@@ -15,7 +15,7 @@ export const STATUS_LIST = [
 export const PAGE_CONFIGS = [
   {
     id: "ticket-detail",
-    urlPattern: /\/browse\/|\/issues\//,
+    urlPattern: /\/browse\/|\/issues\/|\/jira\/software\/|\/projects\//,
     selectors: {
       ticketId: "[data-testid=\"issue.views.issue-base.foundation.breadcrumbs.current-issue.item\"]",
       status: "[data-testid=\"issue-field-status.ui.status-view.status-button.status-button\"]",
@@ -28,7 +28,7 @@ export const PAGE_CONFIGS = [
   },
   {
     id: "list-view",
-    urlPattern: /\/jira\/software\//,
+    urlPattern: /\/jira\/software\/|\/issues\//,
     selectors: {
       row: "[role=\"row\"], .BaseTable__row",
       ticketId: "[data-testid=\"business-list.ui.list-view.key-cell.issue-key\"]",

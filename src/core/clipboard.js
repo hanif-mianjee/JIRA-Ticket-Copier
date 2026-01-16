@@ -1,5 +1,6 @@
 import { COLORS } from "../ui/styles.js";
 import { getFormat } from "./storage.js";
+import { BUTTON_TEXT, FEEDBACK_TIMING } from "../config/constants.js";
 
 export function formatMessage(format, info) {
   return format
@@ -42,24 +43,24 @@ export const mainButtonFeedback = {
   success: (btn) => {
     btn.dataset.feedbackActive = "true";
     const originalBg = btn.style.background;
-    btn.textContent = "✓ Copied!";
+    btn.textContent = BUTTON_TEXT.copied;
     btn.style.background = COLORS.success;
     setTimeout(() => {
-      btn.textContent = "Copy Ticket Info";
+      btn.textContent = BUTTON_TEXT.copyTicketInfo;
       btn.style.background = originalBg || COLORS.buttonBg;
       btn.dataset.feedbackActive = "false";
-    }, 1200);
+    }, FEEDBACK_TIMING.success);
   },
   fail: (btn) => {
     btn.dataset.feedbackActive = "true";
     const originalBg = btn.style.background;
-    btn.textContent = "✗ Failed";
+    btn.textContent = BUTTON_TEXT.failed;
     btn.style.background = COLORS.error;
     setTimeout(() => {
-      btn.textContent = "Copy Ticket Info";
+      btn.textContent = BUTTON_TEXT.copyTicketInfo;
       btn.style.background = originalBg || COLORS.buttonBg;
       btn.dataset.feedbackActive = "false";
-    }, 1800);
+    }, FEEDBACK_TIMING.error);
   },
 };
 
@@ -114,12 +115,12 @@ export async function copyTicketInfo(info, statusOverride, btn, feedback) {
   }
   const statusToUse = statusOverride || info.status;
   if (!statusToUse) {
-    btn.textContent = "Status not found";
+    btn.textContent = BUTTON_TEXT.statusNotFound;
     btn.style.background = COLORS.error;
     setTimeout(() => {
-      btn.textContent = "Copy Ticket Info";
+      btn.textContent = BUTTON_TEXT.copyTicketInfo;
       btn.style.background = COLORS.buttonBgActive;
-    }, 1800);
+    }, FEEDBACK_TIMING.error);
     return;
   }
   const format = await getFormat("ticketInfoFormat");

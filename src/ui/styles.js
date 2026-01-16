@@ -23,14 +23,14 @@ export function setButtonStyle(btn, isLeft) {
     color: COLORS.buttonText,
     border: "none",
     borderRadius: isLeft ? "3px 0 0 3px" : "0 3px 3px 0",
-    padding: "6px 12px",
+    padding: "6px 10px",
     cursor: "pointer",
-    fontSize: "14px",
+    fontSize: "0.75rem",
     fontWeight: "500",
     boxShadow: COLORS.shadow,
     transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
     outline: "none",
-    lineHeight: "1.5",
+    lineHeight: "1.3",
     position: "relative",
   });
 
@@ -69,10 +69,10 @@ export function setDropdownItemStyle(item, isDefault = false) {
     cursor: "pointer",
     background: COLORS.dropdownBg,
     color: isDefault ? "#6B778C" : COLORS.dropdownText,
-    fontSize: "14px",
+    fontSize: "12px",
     fontWeight: isDefault ? "400" : "500",
     fontStyle: isDefault ? "italic" : "normal",
-    transition: "all 0.15s ease",
+    transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
     borderBottom: `1px solid ${COLORS.dropdownBorder}`,
   });
 
@@ -90,7 +90,7 @@ export function setDropdownItemStyle(item, isDefault = false) {
 }
 
 export function setIconButtonStyle(btn, options = {}) {
-  const { height = "32px", marginLeft = "6px", padding = "0 8px" } = options;
+  const { height = "28px", marginLeft = "6px", padding = "0 8px" } = options;
   Object.assign(btn.style, {
     background: COLORS.iconButtonBg,
     color: "#fff",
@@ -153,7 +153,7 @@ export function setListButtonStyle(btn) {
     justifyContent: "center",
     height: "22px",
     width: "22px",
-    transition: "all 0.15s ease",
+    transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
     marginLeft: "6px",
     flexShrink: "0",
     boxShadow: "0 1px 2px rgba(0, 0, 0, 0.1)",

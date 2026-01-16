@@ -8,11 +8,12 @@ import {
   createIconButtonFeedback,
   createListButtonFeedback,
 } from "../core/clipboard.js";
+import { BUTTON_TEXT } from "../config/constants.js";
 
 export function createCopyButton(getInfo, selectedStatusRef) {
   const btn = document.createElement("button");
   btn.id = "jira-ticket-copy-btn";
-  btn.textContent = "Copy Ticket Info";
+  btn.textContent = BUTTON_TEXT.copyTicketInfo;
   btn.setAttribute("aria-label", "Copy JIRA ticket info to clipboard");
   btn.setAttribute("tabindex", "0");
   setButtonStyle(btn, true);

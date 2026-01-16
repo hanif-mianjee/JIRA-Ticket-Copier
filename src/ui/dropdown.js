@@ -1,6 +1,7 @@
 import { STATUS_LIST } from "../config/selectors.js";
 import { COLORS, setButtonStyle, setDropdownItemStyle } from "./styles.js";
 import { getStatusList } from "../core/storage.js";
+import { getChevronDownSVG } from "./icons.js";
 
 export function createDropdown(selectedStatusRef, onSelect) {
   const dropdownWrapper = document.createElement("div");
@@ -12,10 +13,18 @@ export function createDropdown(selectedStatusRef, onSelect) {
   });
 
   const dropdownBtn = document.createElement("button");
-  dropdownBtn.innerHTML = "<span style='font-size: 12px;'>&#9660;</span>";
+  dropdownBtn.innerHTML = getChevronDownSVG();
   dropdownBtn.setAttribute("aria-label", "Select status override");
   dropdownBtn.title = "Override status";
   setButtonStyle(dropdownBtn, false);
+  // Override to match main button height and center the icon
+  Object.assign(dropdownBtn.style, {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    height: "28px",
+    padding: "0 5px",
+  });
 
   const dropdownMenu = document.createElement("div");
   Object.assign(dropdownMenu.style, {
