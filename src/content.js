@@ -20,6 +20,8 @@ function extractInfo(selectors, context = document) {
   let ticketUrl = window.location.href;
   if (ticketEl?.getAttribute("href")) {
     ticketUrl = `${window.location.origin}${ticketEl.getAttribute("href")}`;
+  } else if (context.tagName === "A" && context.getAttribute("href")) {
+    ticketUrl = `${window.location.origin}${context.getAttribute("href")}`;
   }
 
   return { ticketId, status, title, ticketUrl };
@@ -79,7 +81,7 @@ function injectListButtons(config) {
     const buttonContainer = row.querySelector(config.selectors.buttonContainer);
     if (!buttonContainer) return;
 
-    Object.assign(buttonContainer.style, { display: "flex", alignItems: "center", justifyContent: "space-between" });
+    Object.assign(buttonContainer.style, { display: "flex", alignItems: "center", justifyContent: "space-between", flexDirection: "row" });
 
     const getInfo = () => extractInfo(config.selectors, row);
 
@@ -99,6 +101,7 @@ function observePage(config, injectFn) {
 
 PAGE_CONFIGS.forEach((config) => {
   if (!config.urlPattern.test(window.location.href)) return;
+  if (config.excludePattern && config.excludePattern.test(window.location.href)) return;
 
   const isListView = !!config.selectors.row;
   const injectFn = isListView ? injectListButtons : injectSinglePageButtons;

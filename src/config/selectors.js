@@ -14,6 +14,34 @@ export const STATUS_LIST = [
 
 export const PAGE_CONFIGS = [
   {
+    id: "board-view",
+    urlPattern: /\/boards\//,
+    selectors: {
+      row: "[data-testid=\"platform-board-kit.ui.card.card\"]",
+      ticketId: "[data-testid=\"platform-card.common.ui.key.key\"] a",
+      title: "[data-testid=\"issue-field-single-line-text-readview-card.ui.single-line-text.container.box\"]",
+      status: "[data-testid=\"platform-card.common.ui.custom-fields.card-custom-field.text-card-custom-field-content.field\"]",
+      buttonContainer: "[data-testid=\"platform-card.ui.card.card-content.footer\"] > div > div:first-child",
+    },
+    buttons: ["listLinkButton"],
+    buttonClass: "jira-list-copy-link-btn",
+    settingKey: "enableListView",
+  },
+  {
+    id: "release-view",
+    urlPattern: /\/versions\/.*\/tab\//,
+    selectors: {
+      row: "[data-testid=\"software-releases-version-detail-issue-list.ui.issues.issue-card\"]",
+      ticketId: "img + span",
+      title: "[role=\"presentation\"] div",
+      status: "[data-testid=\"common-components-status-lozenge.status-lozenge--text\"]",
+      buttonContainer: "[role=\"presentation\"]",
+    },
+    buttons: ["listLinkButton"],
+    buttonClass: "jira-list-copy-link-btn",
+    settingKey: "enableListView",
+  },
+  {
     id: "ticket-detail",
     urlPattern: /\/browse\/|\/issues\/|\/jira\/software\/|\/projects\//,
     selectors: {
@@ -28,7 +56,8 @@ export const PAGE_CONFIGS = [
   },
   {
     id: "list-view",
-    urlPattern: /\/jira\/software\/|\/issues\//,
+    urlPattern: /\/jira\/software\/|\/issues\/|\/projects\//,
+    excludePattern: /\/boards\/|\/versions\/.*\/tab\//,
     selectors: {
       row: "[role=\"row\"], .BaseTable__row",
       ticketId: "[data-testid=\"business-list.ui.list-view.key-cell.issue-key\"]",
