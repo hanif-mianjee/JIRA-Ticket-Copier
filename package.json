@@ -7,7 +7,7 @@
   "main": "src/content.js",
   "scripts": {
     "build": "vite build && node copy-icons.mjs && node copy-options.mjs && node copy-background.mjs && node copy-welcome.mjs",
-    "package": "npm run build && zip -r jira-ticket-copier.zip manifest.json dist/ README.md packaging_instructions.txt",
+    "package": "npm run build && zip -r jira-ticket-copier-$npm_package_version.zip manifest.json dist/ README.md packaging_instructions.txt",
     "lint": "eslint src --ext .js",
     "test": "jest --env=jsdom src/*.test.js",
     "prepare": "husky install",
