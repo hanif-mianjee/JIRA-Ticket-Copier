@@ -1,17 +1,3 @@
-export const STATUS_LIST = [
-  "Waiting for Input",
-  "Released",
-  "Analysis",
-  "In Review",
-  "PR Raised",
-  "Analysis/Comment added",
-  "Blocked",
-  "Blocked/Comment added",
-  "Blocked/Waiting for Input",
-  "Waiting for Input",
-  "Review suggestions applied",
-];
-
 export const PAGE_CONFIGS = [
   {
     id: "board-view",

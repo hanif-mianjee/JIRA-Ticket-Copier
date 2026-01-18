@@ -1,10 +1,54 @@
 import { PAGE_CONFIGS } from "./config/selectors.js";
+import { OBSERVER_DEBOUNCE_MS } from "./config/constants.js";
 import { getSetting } from "./core/storage.js";
 import { copyTicketInfo, mainButtonFeedback } from "./core/clipboard.js";
 import { createCopyButton, createGitButton, createLinkButton, createListLinkButton } from "./ui/buttons.js";
 import { createDropdown } from "./ui/dropdown.js";
 
 console.log("[JIRA Ticket Copier] Content script loaded");
+
+// Track the current URL for SPA navigation detection
+let currentUrl = window.location.href;
+
+// Track active observers for cleanup
+const activeObservers = [];
+
+/**
+ * Debounce utility to limit how often a function can be called
+ * @param {Function} fn - Function to debounce
+ * @param {number} delay - Delay in milliseconds
+ * @returns {Function} Debounced function
+ */
+function debounce(fn, delay) {
+  let timeoutId;
+  return (...args) => {
+    clearTimeout(timeoutId);
+    timeoutId = setTimeout(() => fn(...args), delay);
+  };
+}
+
+/**
+ * Clean up existing button groups and their associated resources
+ */
+function cleanupButtonGroups() {
+  // Clean up single page button groups
+  PAGE_CONFIGS.forEach((config) => {
+    if (config.groupId) {
+      const existingGroup = document.getElementById(config.groupId);
+      if (existingGroup) {
+        // Clean up AbortController from dropdown if present
+        const dropdown = existingGroup.querySelector("#jira-ticket-status-dropdown-wrapper");
+        if (dropdown && dropdown._abortController) {
+          dropdown._abortController.abort();
+        }
+        existingGroup.remove();
+      }
+    }
+  });
+
+  // Clean up list view buttons
+  document.querySelectorAll(".jira-list-copy-link-btn").forEach((btn) => btn.remove());
+}
 
 function extractInfo(selectors, context = document) {
   const ticketEl = context.querySelector(selectors.ticketId);
@@ -93,16 +137,92 @@ function injectListButtons(config) {
   });
 }
 
-function observePage(config, injectFn) {
-  injectFn(config);
-  const observer = new MutationObserver(() => injectFn(config));
-  observer.observe(document.body, { childList: true, subtree: true });
+/**
+ * Check if the current URL matches a config and inject buttons if needed
+ * @param {Object} config - Page configuration
+ * @param {Function} injectFn - Injection function to use
+ */
+function checkAndInject(config, injectFn) {
+  const urlMatches = config.urlPattern.test(window.location.href);
+  const excluded = config.excludePattern && config.excludePattern.test(window.location.href);
+  
+  if (urlMatches && !excluded) {
+    injectFn(config);
+  }
 }
 
-PAGE_CONFIGS.forEach((config) => {
-  if (!config.urlPattern.test(window.location.href)) return;
-  if (config.excludePattern && config.excludePattern.test(window.location.href)) return;
+/**
+ * Set up observation for a page config with debouncing
+ * @param {Object} config - Page configuration
+ * @param {Function} injectFn - Injection function to use
+ */
+function observePage(config, injectFn) {
+  // Initial injection
+  checkAndInject(config, injectFn);
+  
+  // Create debounced injection function
+  const debouncedInject = debounce(() => {
+    checkAndInject(config, injectFn);
+  }, OBSERVER_DEBOUNCE_MS);
+  
+  // Observe DOM changes with debouncing
+  const observer = new MutationObserver(debouncedInject);
+  observer.observe(document.body, { childList: true, subtree: true });
+  activeObservers.push(observer);
+}
 
+/**
+ * Handle SPA navigation by detecting URL changes
+ * Re-evaluates all configs when URL changes to support view switching (board <-> list)
+ */
+function handleSPANavigation() {
+  if (currentUrl === window.location.href) return;
+  
+  console.log("[JIRA Ticket Copier] SPA navigation detected:", currentUrl, "->", window.location.href);
+  currentUrl = window.location.href;
+  
+  // Clean up existing buttons to allow re-injection based on new URL
+  cleanupButtonGroups();
+  
+  // Re-check all configs for the new URL
+  // Note: Observers are already running and will pick up changes via their debounced callbacks
+}
+
+/**
+ * Set up SPA navigation detection using multiple strategies
+ */
+function setupSPADetection() {
+  // Strategy 1: Listen to popstate for browser back/forward navigation
+  window.addEventListener("popstate", handleSPANavigation);
+  
+  // Strategy 2: Override pushState and replaceState for programmatic navigation
+  const originalPushState = history.pushState;
+  const originalReplaceState = history.replaceState;
+  
+  history.pushState = function(...args) {
+    originalPushState.apply(this, args);
+    handleSPANavigation();
+  };
+  
+  history.replaceState = function(...args) {
+    originalReplaceState.apply(this, args);
+    handleSPANavigation();
+  };
+  
+  // Strategy 3: Periodic URL check as fallback for edge cases
+  // Some SPAs may change URL without using standard History API
+  setInterval(() => {
+    if (currentUrl !== window.location.href) {
+      handleSPANavigation();
+    }
+  }, 500);
+}
+
+// Initialize SPA navigation detection
+setupSPADetection();
+
+// Set up observers for all matching page configs
+PAGE_CONFIGS.forEach((config) => {
   const isListView = !!config.selectors.row;
   const injectFn = isListView ? injectListButtons : injectSinglePageButtons;
 
