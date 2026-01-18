@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.3.1](https://github.com/hanif-mianjee/JIRA-Ticket-Copier/compare/v0.3.0...v0.3.1) (2026-01-18)
+
+
+### Bug Fixes
+
+* address memory leaks, debounce DOM observer, consolidate STATUS_LIST, prevent duplicate styles, and support SPA navigation ([69dd065](https://github.com/hanif-mianjee/JIRA-Ticket-Copier/commit/69dd06544269aa25b9323e299a6734166a474bf5))
+
 ## [0.3.0](https://github.com/hanif-mianjee/JIRA-Ticket-Copier/compare/v0.2.0...v0.3.0) (2026-01-17)
 
 ## [0.2.0](https://github.com/hanif-mianjee/JIRA-Ticket-Copier/compare/v0.1.12...v0.2.0) (2026-01-16)
