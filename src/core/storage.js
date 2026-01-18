@@ -1,4 +1,4 @@
-import { STATUS_LIST } from "../config/selectors.js";
+import { STATUS_LIST } from "../config/constants.js";
 
 const DEFAULT_FORMATS = {
   commitFormat: "{{ticketId}}: {{title}}",

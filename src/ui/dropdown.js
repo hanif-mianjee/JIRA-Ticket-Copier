@@ -1,9 +1,49 @@
-import { STATUS_LIST } from "../config/selectors.js";
 import { COLORS, setButtonStyle, setDropdownItemStyle } from "./styles.js";
 import { getStatusList } from "../core/storage.js";
 import { getChevronDownSVG } from "./icons.js";
 
+const DROPDOWN_STYLES_ID = "jira-copier-dropdown-styles";
+
+/**
+ * Append dropdown styles only once to prevent duplicate style tags
+ */
+function appendDropdownStyles() {
+  if (document.getElementById(DROPDOWN_STYLES_ID)) return;
+  
+  const style = document.createElement("style");
+  style.id = DROPDOWN_STYLES_ID;
+  style.textContent = `
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    #jira-ticket-status-dropdown-wrapper div::-webkit-scrollbar {
+      width: 8px;
+    }
+    #jira-ticket-status-dropdown-wrapper div::-webkit-scrollbar-track {
+      background: #F4F5F7;
+    }
+    #jira-ticket-status-dropdown-wrapper div::-webkit-scrollbar-thumb {
+      background: #C1C7D0;
+      border-radius: 4px;
+    }
+    #jira-ticket-status-dropdown-wrapper div::-webkit-scrollbar-thumb:hover {
+      background: #A5ADBA;
+    }
+    @media (prefers-reduced-motion: reduce) {
+      #jira-ticket-status-dropdown-wrapper * {
+        animation: none !important;
+        transition: none !important;
+      }
+    }
+  `;
+  document.head.appendChild(style);
+}
+
 export function createDropdown(selectedStatusRef, onSelect) {
+  // Append styles once
+  appendDropdownStyles();
+
   const dropdownWrapper = document.createElement("div");
   dropdownWrapper.id = "jira-ticket-status-dropdown-wrapper";
   Object.assign(dropdownWrapper.style, {
@@ -43,28 +83,6 @@ export function createDropdown(selectedStatusRef, onSelect) {
     animation: "fadeIn 0.15s ease",
   });
 
-  const style = document.createElement("style");
-  style.textContent = `
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(-8px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-    #jira-ticket-status-dropdown-wrapper div::-webkit-scrollbar {
-      width: 8px;
-    }
-    #jira-ticket-status-dropdown-wrapper div::-webkit-scrollbar-track {
-      background: #F4F5F7;
-    }
-    #jira-ticket-status-dropdown-wrapper div::-webkit-scrollbar-thumb {
-      background: #C1C7D0;
-      border-radius: 4px;
-    }
-    #jira-ticket-status-dropdown-wrapper div::-webkit-scrollbar-thumb:hover {
-      background: #A5ADBA;
-    }
-  `;
-  document.head.appendChild(style);
-
   const defaultItem = document.createElement("div");
   defaultItem.textContent = "(Use page status)";
   setDropdownItemStyle(defaultItem, true);
@@ -94,9 +112,14 @@ export function createDropdown(selectedStatusRef, onSelect) {
     dropdownMenu.style.display = dropdownMenu.style.display === "none" ? "block" : "none";
   };
 
+  // Use AbortController to prevent memory leaks from accumulated event listeners
+  const abortController = new AbortController();
   document.addEventListener("click", () => {
     dropdownMenu.style.display = "none";
-  });
+  }, { signal: abortController.signal });
+
+  // Store abort controller on wrapper for cleanup when element is removed
+  dropdownWrapper._abortController = abortController;
 
   dropdownWrapper.appendChild(dropdownBtn);
   dropdownWrapper.appendChild(dropdownMenu);
