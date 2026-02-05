@@ -7,7 +7,7 @@ node_modules/
 .DS_Store
 
 # Chrome Extension Artifacts
-jira-ticket-copier.zip
+jira-ticket-copier-*.zip
 
 # Build output
 dist/
