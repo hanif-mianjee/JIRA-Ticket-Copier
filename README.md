@@ -18,7 +18,7 @@ A Chrome extension to quickly copy JIRA ticket info (ID, status, title) to your 
 - Feedback text (e.g. "Copied!") is visually distinct with padding for clarity
 - Modular, well-documented code (JavaScript, Manifest v3)
 - Unit tests for all utility functions (Jest, jsdom)
-- Automated build, lint, test, versioning, and packaging workflow
+- Manual build, lint, test, versioning, and packaging workflow (GitHub Actions removed to avoid charges)
 
 ---
 
@@ -178,31 +178,35 @@ npm run release
 
 ### 6. Publish a GitHub Release
 
-After running `npm run release` and pushing your tag, you must publish a GitHub Release for it to appear on the Releases page:
+After running `npm run release` and pushing your tag, you must publish a GitHub Release manually:
 
-**Manual:**
+1. Go to the "Releases" tab on GitHub
+2. Click "Draft a new release" and select the latest tag (e.g., `v0.1.0`)
+3. Add release notes (or let GitHub auto-generate them) and publish
+4. Optionally attach the built ZIP file from `npm run package`
 
-1. Go to the "Releases" tab on GitHub.
-2. Click "Draft a new release" and select the latest tag (e.g., `v0.1.0`).
-3. Add release notes (or let GitHub auto-generate them) and publish.
-
-**Automated:**
-
-- This repo includes a GitHub Actions workflow (`.github/workflows/release.yml`) that will automatically create a GitHub Release when you push a tag starting with `v` (e.g., `v0.1.0`).
-
-**To create a release tag:**
+**To create a release:**
 
 ```sh
 npm run release
 git push --follow-tags
+# Then manually create the release on GitHub
 ```
 
-After the workflow runs, your release will appear on the GitHub Releases page.
+### 6. (Optional) Manual Quality Checks
 
-### 6. (Optional) Continuous Integration
+**Note:** GitHub Actions workflows have been removed to avoid usage charges. Run these commands manually before releases:
 
-- GitHub Actions workflow runs lint, test, build, and packaging on every push/PR
-- Produces distributable ZIP as an artifact
+```sh
+# Full quality check sequence
+npm run lint
+npm test  
+npm run validate-manifest
+npm run build
+npm run package
+```
+
+**Why Manual?** GitHub Actions charges based on compute minutes. For a Chrome extension project, manual testing is often more cost-effective than automated CI/CD, especially during active development.
 
 ### 7. Package for Chrome Web Store (Final Step)
 
