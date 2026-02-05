@@ -1,9 +1,18 @@
 import { PAGE_CONFIGS } from "./config/selectors.js";
 import { OBSERVER_DEBOUNCE_MS } from "./config/constants.js";
-import { getSetting } from "./core/storage.js";
+import { getSetting, getSettings } from "./core/storage.js";
 import { copyTicketInfo, mainButtonFeedback } from "./core/clipboard.js";
 import { createCopyButton, createGitButton, createLinkButton, createListLinkButton } from "./ui/buttons.js";
 import { createDropdown } from "./ui/dropdown.js";
+
+// Button name to setting key mapping
+const BUTTON_SETTINGS = {
+  copyTicketInfo: "enableTicketInfo",
+  statusDropdown: "enableTicketInfo", // Dropdown follows main button
+  gitButton: "enableGitButton",
+  linkButton: "enableLinkButton",
+  listLinkButton: "enableListView", // Already handled at page level
+};
 
 console.log("[JIRA Ticket Copier] Content script loaded");
 
@@ -79,7 +88,20 @@ const BUTTON_CREATORS = {
   listLinkButton: (getInfo) => createListLinkButton(getInfo),
 };
 
-function createButtonGroup(config, getInfo, parent) {
+async function createButtonGroup(config, getInfo, parent) {
+  // Get all required settings at once
+  const settingKeys = [...new Set(config.buttons.map(button => BUTTON_SETTINGS[button]).filter(Boolean))];
+  const settings = await getSettings(settingKeys);
+  
+  // Filter buttons based on enabled settings
+  const enabledButtons = config.buttons.filter(buttonName => {
+    const settingKey = BUTTON_SETTINGS[buttonName];
+    return !settingKey || settings[settingKey];
+  });
+  
+  // Only create group if there are enabled buttons
+  if (enabledButtons.length === 0) return;
+  
   const group = document.createElement("div");
   group.id = config.groupId;
   Object.assign(group.style, { marginLeft: "8px", display: "inline-flex", alignItems: "center" });
@@ -91,7 +113,7 @@ function createButtonGroup(config, getInfo, parent) {
     copyTicketInfo(getInfo(), selectedStatus.value, btn, mainButtonFeedback);
   };
 
-  config.buttons.forEach((buttonName) => {
+  enabledButtons.forEach((buttonName) => {
     const creator = BUTTON_CREATORS[buttonName];
     if (creator) {
       const btn = creator(getInfo, selectedStatus, triggerCopy);
@@ -100,7 +122,7 @@ function createButtonGroup(config, getInfo, parent) {
   });
 }
 
-function injectSinglePageButtons(config) {
+async function injectSinglePageButtons(config) {
   if (document.getElementById(config.groupId)) return;
 
   const container = document.querySelector(config.selectors.container);
@@ -113,10 +135,14 @@ function injectSinglePageButtons(config) {
   const parent = insertAfter?.parentNode || container.parentNode;
   const getInfo = () => extractInfo(config.selectors);
 
-  createButtonGroup(config, getInfo, parent);
+  await createButtonGroup(config, getInfo, parent);
 }
 
-function injectListButtons(config) {
+async function injectListButtons(config) {
+  // Check if list view buttons are enabled
+  const listViewEnabled = await getSetting("enableListView");
+  if (!listViewEnabled) return;
+  
   const rows = document.querySelectorAll(config.selectors.row);
 
   rows.forEach((row) => {
@@ -142,12 +168,12 @@ function injectListButtons(config) {
  * @param {Object} config - Page configuration
  * @param {Function} injectFn - Injection function to use
  */
-function checkAndInject(config, injectFn) {
+async function checkAndInject(config, injectFn) {
   const urlMatches = config.urlPattern.test(window.location.href);
   const excluded = config.excludePattern && config.excludePattern.test(window.location.href);
   
   if (urlMatches && !excluded) {
-    injectFn(config);
+    await injectFn(config);
   }
 }
 
@@ -226,11 +252,24 @@ PAGE_CONFIGS.forEach((config) => {
   const isListView = !!config.selectors.row;
   const injectFn = isListView ? injectListButtons : injectSinglePageButtons;
 
-  if (config.settingKey) {
-    getSetting(config.settingKey).then((enabled) => {
-      if (enabled) observePage(config, injectFn);
-    });
-  } else {
+  // For list views, we already handle setting check in injectListButtons
+  // For other views, check if any button in the config might be enabled
+  if (isListView) {
     observePage(config, injectFn);
+  } else {
+    // Check if any button setting is enabled before observing
+    const settingKeys = [...new Set(config.buttons.map(button => BUTTON_SETTINGS[button]).filter(Boolean))];
+    if (settingKeys.length === 0) {
+      // No settings to check, observe directly
+      observePage(config, injectFn);
+    } else {
+      getSettings(settingKeys).then((settings) => {
+        // Only observe if at least one button is enabled
+        const hasEnabledButton = settingKeys.some(key => settings[key]);
+        if (hasEnabledButton) {
+          observePage(config, injectFn);
+        }
+      });
+    }
   }
 });
