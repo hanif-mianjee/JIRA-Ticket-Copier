@@ -8,7 +8,7 @@
   --color-primary: #0052CC;
   --color-primary-hover: #0065FF;
   --color-primary-dark: #0747A6;
-  --color-success: #00875A;
+  --color-success: #4C6B1F;
   --color-purple: #6554C0;
   --color-text: #172B4D;
   --color-text-secondary: #5E6C84;
@@ -176,7 +176,7 @@ section h3 {
 
 .feature-icon.blue { background: rgba(0, 82, 204, 0.1); }
 .feature-icon.purple { background: rgba(101, 84, 192, 0.1); }
-.feature-icon.green { background: rgba(0, 135, 90, 0.1); }
+.feature-icon.green { background: rgba(76, 107, 31, 0.1); }
 .feature-icon.yellow { background: rgba(255, 171, 0, 0.1); }
 
 .feature-card h4 {

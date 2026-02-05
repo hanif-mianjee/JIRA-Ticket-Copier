@@ -1,15 +1,15 @@
 export const COLORS = {
-  buttonBg: "#0052CC",
+  buttonBg: "#1558BC",
   buttonBgHover: "#0065FF",
   buttonBgActive: "#0747A6",
-  buttonText: "#FFFFFF",
+  buttonText: "#CECFD2",
   dropdownBg: "#FFFFFF",
   dropdownText: "#172B4D",
   dropdownHoverBg: "#DEEBFF",
   dropdownHoverText: "#0052CC",
   dropdownBorder: "#DFE1E6",
   error: "#DE350B",
-  success: "#00875A",
+  success: "#4C6B1F",
   iconButtonBg: "#42526E",
   iconButtonBgHover: "#344563",
   iconButtonBgActive: "#253858",
@@ -18,9 +18,12 @@ export const COLORS = {
 };
 
 export function setButtonStyle(btn, isLeft) {
+  // Use setProperty with important flag for core styling
+  btn.style.setProperty("background", COLORS.buttonBg, "important");
+  btn.style.setProperty("color", COLORS.buttonText, "important");
+  
+  // Apply other styles normally
   Object.assign(btn.style, {
-    background: COLORS.buttonBg,
-    color: COLORS.buttonText,
     border: "none",
     borderRadius: isLeft ? "3px 0 0 3px" : "0 3px 3px 0",
     padding: "6px 10px",
@@ -36,20 +39,20 @@ export function setButtonStyle(btn, isLeft) {
 
   btn.onmouseenter = () => {
     if (btn.dataset.feedbackActive === "true") return;
-    btn.style.background = COLORS.buttonBgHover;
+    btn.style.setProperty("background", COLORS.buttonBgHover, "important");
     btn.style.boxShadow = COLORS.shadowHover;
     btn.style.transform = "translateY(-1px)";
   };
 
   btn.onmouseleave = () => {
     if (btn.dataset.feedbackActive === "true") return;
-    btn.style.background = COLORS.buttonBg;
+    btn.style.setProperty("background", COLORS.buttonBg, "important");
     btn.style.boxShadow = COLORS.shadow;
     btn.style.transform = "translateY(0)";
   };
 
   btn.onmousedown = () => {
-    btn.style.background = COLORS.buttonBgActive;
+    btn.style.setProperty("background", COLORS.buttonBgActive, "important");
     btn.style.transform = "translateY(0)";
     btn.style.outline = "none";
   };
@@ -91,9 +94,12 @@ export function setDropdownItemStyle(item, isDefault = false) {
 
 export function setIconButtonStyle(btn, options = {}) {
   const { height = "28px", marginLeft = "6px", padding = "0 8px" } = options;
+  
+  // Use setProperty with important flag for color
+  btn.style.setProperty("color", COLORS.buttonText, "important");
+  
   Object.assign(btn.style, {
     background: COLORS.iconButtonBg,
-    color: "#fff",
     border: "none",
     borderRadius: "3px",
     padding,
@@ -140,9 +146,11 @@ export function setIconButtonStyle(btn, options = {}) {
 }
 
 export function setListButtonStyle(btn) {
+  // Use setProperty with important flag for color
+  btn.style.setProperty("color", COLORS.buttonText, "important");
+  
   Object.assign(btn.style, {
     background: COLORS.iconButtonBg,
-    color: "#fff",
     border: "none",
     borderRadius: "3px",
     padding: "0 5px",
