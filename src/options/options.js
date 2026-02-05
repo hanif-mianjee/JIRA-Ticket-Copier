@@ -170,7 +170,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (successMessage) {
       successMessage.textContent = message;
       successMessage.classList.add("show");
-      successMessage.style.background = isSuccess ? "#00875A" : "#DE350B";
+      successMessage.style.background = isSuccess ? "#4C6B1F" : "#DE350B";
       
       setTimeout(() => {
         successMessage.classList.remove("show");

@@ -44,10 +44,10 @@ export const mainButtonFeedback = {
     btn.dataset.feedbackActive = "true";
     const originalBg = btn.style.background;
     btn.textContent = BUTTON_TEXT.copied;
-    btn.style.background = COLORS.success;
+    btn.style.setProperty("background", COLORS.success, "important");
     setTimeout(() => {
       btn.textContent = BUTTON_TEXT.copyTicketInfo;
-      btn.style.background = originalBg || COLORS.buttonBg;
+      btn.style.setProperty("background", originalBg || COLORS.buttonBg, "important");
       btn.dataset.feedbackActive = "false";
     }, FEEDBACK_TIMING.success);
   },
@@ -55,10 +55,10 @@ export const mainButtonFeedback = {
     btn.dataset.feedbackActive = "true";
     const originalBg = btn.style.background;
     btn.textContent = BUTTON_TEXT.failed;
-    btn.style.background = COLORS.error;
+    btn.style.setProperty("background", COLORS.error, "important");
     setTimeout(() => {
       btn.textContent = BUTTON_TEXT.copyTicketInfo;
-      btn.style.background = originalBg || COLORS.buttonBg;
+      btn.style.setProperty("background", originalBg || COLORS.buttonBg, "important");
       btn.dataset.feedbackActive = "false";
     }, FEEDBACK_TIMING.error);
   },
@@ -68,19 +68,19 @@ export function createIconButtonFeedback(getIconFn) {
   const setContent = (btn, type) => {
     btn.dataset.feedbackActive = "true";
     if (type === "success") {
-      btn.style.background = COLORS.success;
+      btn.style.setProperty("background", COLORS.success, "important");
       btn.innerHTML = "<span style='font-size:18px;font-weight:bold;display:flex;align-items:center;justify-content:center;width:100%;height:100%;'>✓</span>";
     } else if (type === "fail") {
-      btn.style.background = COLORS.error;
+      btn.style.setProperty("background", COLORS.error, "important");
       btn.innerHTML = "<span style='font-size:18px;font-weight:bold;display:flex;align-items:center;justify-content:center;width:100%;height:100%;'>✗</span>";
     } else if (type === "notfound") {
-      btn.style.background = COLORS.error;
+      btn.style.setProperty("background", COLORS.error, "important");
       btn.innerHTML = "<span style='font-size:18px;font-weight:bold;display:flex;align-items:center;justify-content:center;width:100%;height:100%;'>!</span>";
     }
   };
   const resetContent = (btn) => {
     btn.dataset.feedbackActive = "false";
-    btn.style.background = COLORS.iconButtonBg;
+    btn.style.setProperty("background", COLORS.iconButtonBg, "important");
     btn.innerHTML = getIconFn();
   };
   return createFeedbackHandler(setContent, resetContent);
@@ -90,19 +90,19 @@ export function createListButtonFeedback(getIconFn) {
   const setContent = (btn, type) => {
     btn.dataset.feedbackActive = "true";
     if (type === "success") {
-      btn.style.background = COLORS.success;
+      btn.style.setProperty("background", COLORS.success, "important");
       btn.innerHTML = "<span style='font-size:12px;font-weight:bold;display:flex;align-items:center;justify-content:center;width:100%;height:100%;'>✓</span>";
     } else if (type === "fail") {
-      btn.style.background = COLORS.error;
+      btn.style.setProperty("background", COLORS.error, "important");
       btn.innerHTML = "<span style='font-size:12px;font-weight:bold;display:flex;align-items:center;justify-content:center;width:100%;height:100%;'>✗</span>";
     } else if (type === "notfound") {
-      btn.style.background = COLORS.error;
+      btn.style.setProperty("background", COLORS.error, "important");
       btn.innerHTML = "<span style='font-size:12px;font-weight:bold;display:flex;align-items:center;justify-content:center;width:100%;height:100%;'>!</span>";
     }
   };
   const resetContent = (btn) => {
     btn.dataset.feedbackActive = "false";
-    btn.style.background = COLORS.iconButtonBg;
+    btn.style.setProperty("background", COLORS.iconButtonBg, "important");
     btn.innerHTML = getIconFn();
   };
   return createFeedbackHandler(setContent, resetContent, 1200);
@@ -116,10 +116,10 @@ export async function copyTicketInfo(info, statusOverride, btn, feedback) {
   const statusToUse = statusOverride || info.status;
   if (!statusToUse) {
     btn.textContent = BUTTON_TEXT.statusNotFound;
-    btn.style.background = COLORS.error;
+    btn.style.setProperty("background", COLORS.error, "important");
     setTimeout(() => {
       btn.textContent = BUTTON_TEXT.copyTicketInfo;
-      btn.style.background = COLORS.buttonBgActive;
+      btn.style.setProperty("background", COLORS.buttonBgActive, "important");
     }, FEEDBACK_TIMING.error);
     return;
   }
