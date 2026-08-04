@@ -1,4 +1,4 @@
-import { getGitIconSVG, getLinkIconSVG, getSmallLinkIconSVG } from "./icons.js";
+import { getDownloadIconSVG, getGitIconSVG, getLinkIconSVG, getSmallLinkIconSVG } from "./icons.js";
 import { setButtonStyle, setIconButtonStyle, setListButtonStyle, COLORS } from "./styles.js";
 import {
   copyTicketInfo,
@@ -8,7 +8,39 @@ import {
   createIconButtonFeedback,
   createListButtonFeedback,
 } from "../core/clipboard.js";
+import { exportTicketMarkdown } from "../core/export.js";
 import { BUTTON_TEXT } from "../config/constants.js";
+
+const EXPORT_STYLES_ID = "jira-copier-export-styles";
+
+/**
+ * Append the spinner styles only once to prevent duplicate style tags
+ */
+function appendExportStyles() {
+  if (document.getElementById(EXPORT_STYLES_ID)) return;
+
+  const style = document.createElement("style");
+  style.id = EXPORT_STYLES_ID;
+  style.textContent = `
+    @keyframes jiraCopierSpin {
+      to { transform: rotate(360deg); }
+    }
+    #jira-ticket-export-btn .jira-copier-spinner {
+      width: 13px;
+      height: 13px;
+      border: 2px solid rgba(255, 255, 255, 0.35);
+      border-top-color: #FFFFFF;
+      border-radius: 50%;
+      animation: jiraCopierSpin 0.7s linear infinite;
+    }
+    @media (prefers-reduced-motion: reduce) {
+      #jira-ticket-export-btn .jira-copier-spinner {
+        animation: none;
+      }
+    }
+  `;
+  document.head.appendChild(style);
+}
 
 export function createCopyButton(getInfo, selectedStatusRef) {
   const btn = document.createElement("button");
@@ -57,6 +89,28 @@ export function createLinkButton(getInfo) {
   btn.onclick = () => {
     const info = getInfo();
     copyLinkMessage(info, btn, feedback);
+  };
+
+  return btn;
+}
+
+export function createExportButton(getInfo) {
+  appendExportStyles();
+
+  const btn = document.createElement("button");
+  btn.id = "jira-ticket-export-btn";
+  btn.setAttribute("aria-label", "Export ticket as Markdown");
+  btn.setAttribute("tabindex", "0");
+  btn.title = "Export ticket as Markdown";
+  setIconButtonStyle(btn);
+  btn.innerHTML = getDownloadIconSVG();
+
+  const feedback = createIconButtonFeedback(getDownloadIconSVG);
+
+  btn.onclick = () => {
+    // Read the ticket now so a panel change mid-export cannot swap the issue.
+    const info = getInfo();
+    exportTicketMarkdown(info, btn, feedback);
   };
 
   return btn;

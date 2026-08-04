@@ -37,7 +37,7 @@ export const PAGE_CONFIGS = [
       container: "[data-testid='issue.views.issue-base.foundation.status.status-field-wrapper']",
       insertAfter: "[data-testid='issue.views.issue-base.foundation.breadcrumbs.breadcrumb-current-issue-container']",
     },
-    buttons: ["copyTicketInfo", "statusDropdown", "gitButton", "linkButton"],
+    buttons: ["copyTicketInfo", "statusDropdown", "gitButton", "linkButton", "exportButton"],
     groupId: "jira-ticket-copier-group",
   },
   {
@@ -56,3 +56,21 @@ export const PAGE_CONFIGS = [
     settingKey: "enableListView",
   },
 ];
+
+// Selectors used by the Markdown exporter to read the rendered issue view.
+export const EXPORT_SELECTORS = {
+  commentItem: "[data-testid^=\"comment-base-item-\"]",
+  commentIdPrefix: "comment-base-item-",
+  replyWrapper: "section[data-testid=\"issue-view-activity-comment.comment-reply-wrapper.reply-container\"]",
+  commentHeader: "[data-testid^=\"issue-comment-base.ui.comment.ak-comment.\"][data-testid$=\"-header\"]",
+  commentBody: "[data-testid^=\"issue-comment-base.ui.comment.ak-comment.\"][data-testid$=\"-body\"]",
+  commentAuthor: "h3",
+  relativeTime: "[data-testid=\"issue-timestamp.relative-time\"]",
+  editedFlag: "[data-testid=\"issue-comment-base.ui.comment.ak-tool-tip--container\"]",
+  renderedBody: ".ak-renderer-document",
+  description: "[data-testid=\"issue.views.field.rich-text.description\"]",
+  issueTypeButton: "[data-testid=\"issue.views.issue-base.foundation.change-issue-type.button\"]",
+  // The rendered media node is the only place the media UUID and the file name
+  // appear together, which is what lets media be matched to a real attachment.
+  mediaNode: "[data-node-type=\"media\"][data-file-name], [data-node-type=\"mediaInline\"][data-file-name]",
+};

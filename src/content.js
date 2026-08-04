@@ -2,7 +2,7 @@ import { PAGE_CONFIGS } from "./config/selectors.js";
 import { OBSERVER_DEBOUNCE_MS } from "./config/constants.js";
 import { getSetting, getSettings } from "./core/storage.js";
 import { copyTicketInfo, mainButtonFeedback } from "./core/clipboard.js";
-import { createCopyButton, createGitButton, createLinkButton, createListLinkButton } from "./ui/buttons.js";
+import { createCopyButton, createExportButton, createGitButton, createLinkButton, createListLinkButton } from "./ui/buttons.js";
 import { createDropdown } from "./ui/dropdown.js";
 
 // Button name to setting key mapping
@@ -11,6 +11,7 @@ const BUTTON_SETTINGS = {
   statusDropdown: "enableTicketInfo", // Dropdown follows main button
   gitButton: "enableGitButton",
   linkButton: "enableLinkButton",
+  exportButton: "enableExportButton",
   listLinkButton: "enableListView", // Already handled at page level
 };
 
@@ -85,6 +86,7 @@ const BUTTON_CREATORS = {
   statusDropdown: (getInfo, selectedStatus, triggerCopy) => createDropdown(selectedStatus, triggerCopy),
   gitButton: (getInfo) => createGitButton(getInfo),
   linkButton: (getInfo) => createLinkButton(getInfo),
+  exportButton: (getInfo) => createExportButton(getInfo),
   listLinkButton: (getInfo) => createListLinkButton(getInfo),
 };
 

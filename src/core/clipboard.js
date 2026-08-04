@@ -36,6 +36,9 @@ export function createFeedbackHandler(setContent, resetContent, resetDelay = 120
       setContent(btn, "notfound");
       setTimeout(() => resetContent(btn), resetDelay + 600);
     },
+    // Restores the button immediately, with no success or failure state, for when
+    // an action was abandoned rather than finished.
+    reset: (btn) => resetContent(btn),
   };
 }
 
