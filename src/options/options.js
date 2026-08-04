@@ -111,6 +111,8 @@ document.addEventListener("DOMContentLoaded", () => {
   const enableGitButtonInput = document.getElementById("enableGitButton");
   const enableLinkButtonInput = document.getElementById("enableLinkButton");
   const enableListViewInput = document.getElementById("enableListView");
+  const enableExportButtonInput = document.getElementById("enableExportButton");
+  const enableAttachmentDownloadInput = document.getElementById("enableAttachmentDownload");
   const successMessage = document.getElementById("successMessage");
   const form = document.getElementById("optionsForm");
   const versionSpan = document.getElementById("version");
@@ -131,10 +133,43 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  // The attachment download toggle is backed by the optional "downloads"
+  // permission rather than a stored flag, so the two can never drift apart.
+  function setupAttachmentDownloadToggle() {
+    if (!enableAttachmentDownloadInput) return;
+    if (!chrome || !chrome.permissions) {
+      enableAttachmentDownloadInput.disabled = true;
+      return;
+    }
+
+    chrome.permissions.contains({ permissions: ["downloads"] }, (granted) => {
+      enableAttachmentDownloadInput.checked = Boolean(granted);
+    });
+
+    enableAttachmentDownloadInput.addEventListener("change", () => {
+      if (enableAttachmentDownloadInput.checked) {
+        chrome.permissions.request({ permissions: ["downloads"] }, (granted) => {
+          enableAttachmentDownloadInput.checked = Boolean(granted);
+          if (granted) {
+            showMessage("Attachments will now be saved next to the exported file");
+          } else {
+            showMessage("Permission declined, attachments will keep linking to Jira", false);
+          }
+        });
+        return;
+      }
+
+      chrome.permissions.remove({ permissions: ["downloads"] }, (removed) => {
+        enableAttachmentDownloadInput.checked = !removed;
+        if (removed) showMessage("Attachments will no longer be downloaded");
+      });
+    });
+  }
+
   function loadOptions() {
     if (chrome && chrome.storage && chrome.storage.sync) {
       chrome.storage.sync.get(
-        ["commitFormat", "ticketInfoFormat", "linkFormat", "statusList", "enableTicketInfo", "enableGitButton", "enableLinkButton", "enableListView"],
+        ["commitFormat", "ticketInfoFormat", "linkFormat", "statusList", "enableTicketInfo", "enableGitButton", "enableLinkButton", "enableListView", "enableExportButton"],
         (result) => {
           if (chrome.runtime && chrome.runtime.lastError) {
             console.error("Error loading formats:", chrome.runtime.lastError);
@@ -151,7 +186,8 @@ document.addEventListener("DOMContentLoaded", () => {
           if (enableGitButtonInput) enableGitButtonInput.checked = result.enableGitButton !== false;
           if (enableLinkButtonInput) enableLinkButtonInput.checked = result.enableLinkButton !== false;
           if (enableListViewInput) enableListViewInput.checked = result.enableListView !== false;
-          
+          if (enableExportButtonInput) enableExportButtonInput.checked = result.enableExportButton !== false;
+
           setupPreviewListeners();
           renderVariables();
           setupCopyButtons();
@@ -188,9 +224,10 @@ document.addEventListener("DOMContentLoaded", () => {
     const enableGitButton = enableGitButtonInput ? enableGitButtonInput.checked : true;
     const enableLinkButton = enableLinkButtonInput ? enableLinkButtonInput.checked : true;
     const enableListView = enableListViewInput ? enableListViewInput.checked : true;
-    
+    const enableExportButton = enableExportButtonInput ? enableExportButtonInput.checked : true;
+
     if (chrome && chrome.storage && chrome.storage.sync) {
-      chrome.storage.sync.set({ commitFormat, ticketInfoFormat, linkFormat, statusList, enableTicketInfo, enableGitButton, enableLinkButton, enableListView }, () => {
+      chrome.storage.sync.set({ commitFormat, ticketInfoFormat, linkFormat, statusList, enableTicketInfo, enableGitButton, enableLinkButton, enableListView, enableExportButton }, () => {
         if (chrome.runtime && chrome.runtime.lastError) {
           console.error("Error saving formats:", chrome.runtime.lastError);
           showMessage("Error saving settings", false);
@@ -205,4 +242,5 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   loadOptions();
+  setupAttachmentDownloadToggle();
 });

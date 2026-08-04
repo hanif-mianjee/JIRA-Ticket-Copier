@@ -43,6 +43,19 @@
               <h4>List View Support</h4>
               <p>Copy buttons directly on JIRA board and list views</p>
             </div>
+            <div class="feature-card feature-card-wide">
+              <div class="feature-icon teal">📥</div>
+              <h4>Export as Markdown <span class="feature-badge">New</span></h4>
+              <p>
+                Download the whole ticket as one Markdown file — description, acceptance criteria, custom fields,
+                linked and child work items and every comment and reply, with code blocks and tables preserved.
+                Saved as <code>PROJ-1234_Ticket_title.md</code>, ready to hand to Claude Code.
+                Switch on <strong>Download attachments</strong> in Settings and the ticket's inline images and
+                files are saved into a <code>PROJ-1234_files/</code> folder beside it, linked by their full path
+                on disk — so the file works wherever you put it, and an AI agent can open the images without a
+                Jira login.
+              </p>
+            </div>
           </div>
         </section>
 
@@ -86,6 +99,10 @@
           <ul>
             <li>Use the status dropdown to override ticket status before copying</li>
             <li>Customize format templates with variables: <code>{{ticketId}}</code>, <code>{{title}}</code>, <code>{{status}}</code></li>
+            <li>The download button exports the full ticket to Markdown — it works on a ticket page and on a board with the ticket preview open</li>
+            <li>Exported files land in your downloads folder, so you can point an AI coding agent straight at them</li>
+            <li>Turn on <strong>Download attachments</strong> in Settings to save a ticket's images and files next to the export — Chrome asks permission once, and everything else keeps working if you decline</li>
+            <li>Exporting a ticket that has attachments will offer to set this up for you the first time, so nothing is silently left out</li>
             <li>Enable/disable individual buttons based on your workflow</li>
             <li>All settings are synced across your Chrome browsers</li>
           </ul>

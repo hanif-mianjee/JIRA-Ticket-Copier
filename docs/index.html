@@ -3,13 +3,13 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="JIRA Ticket Copier - Copy JIRA ticket info, git commit messages, and rich links with one click. Privacy-first Chrome extension." />
-    <meta name="keywords" content="JIRA, Chrome Extension, Productivity, Git, Commit Message, Clipboard" />
+    <meta name="description" content="JIRA Ticket Copier - Copy JIRA ticket info, git commit messages, and rich links with one click, or export a whole ticket to Markdown for your AI coding agent. Privacy-first Chrome extension." />
+    <meta name="keywords" content="JIRA, Chrome Extension, Productivity, Git, Commit Message, Clipboard, Markdown Export, Claude Code" />
     <meta name="author" content="Hanif Mianjee" />
-    
+
     <!-- Open Graph / Social Media -->
     <meta property="og:title" content="JIRA Ticket Copier - Chrome Extension" />
-    <meta property="og:description" content="Copy JIRA ticket info, git commit messages, and rich links with one click." />
+    <meta property="og:description" content="Copy JIRA ticket info, git commit messages, and rich links with one click, or export a whole ticket to Markdown." />
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://hanif-mianjee.github.io/JIRA-Ticket-Copier/" />
     
@@ -45,7 +45,8 @@
           <div class="badge">Chrome Extension</div>
           <h1>Copy JIRA Tickets <span class="gradient-text">Effortlessly</span></h1>
           <p class="hero-description">
-            The fastest way to copy ticket info, git commit messages, and rich links from JIRA Cloud. 
+            The fastest way to copy ticket info, git commit messages, and rich links from JIRA Cloud —
+            or export a whole ticket to Markdown for your AI coding agent.
             One click. No friction. Privacy-first.
           </p>
           <div class="hero-buttons">
@@ -81,6 +82,13 @@
                     </svg>
                   </div>
                   <div class="mockup-btn icon link">🔗</div>
+                  <div class="mockup-btn icon download">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M12 3v11"></path>
+                      <path d="M7 10l5 5 5-5"></path>
+                      <path d="M4 20h16"></path>
+                    </svg>
+                  </div>
                 </div>
                 <h3 class="mockup-title">Fix authentication timeout issue</h3>
                 <div class="mockup-status">In Progress</div>
@@ -96,7 +104,7 @@
       <div class="container">
         <div class="section-header">
           <h2>Everything You Need</h2>
-          <p>Three powerful copy modes designed for developers and project managers</p>
+          <p>Three copy modes plus a full Markdown export, designed for developers and project managers</p>
         </div>
         <div class="features-grid">
           <div class="feature-card">
@@ -135,6 +143,20 @@
             <p>Copy clickable hyperlinks that paste beautifully into Slack, Confluence, Notion, and Google Docs.</p>
             <div class="feature-example">
               <code><a href="#">PROJ-1234: Fix login bug</a></code>
+            </div>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon teal">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 3v11"></path>
+                <path d="M7 10l5 5 5-5"></path>
+                <path d="M4 20h16"></path>
+              </svg>
+            </div>
+            <h3>Export to Markdown</h3>
+            <p>Download the whole ticket — description, custom fields, linked and child work items and every comment — as one Markdown file. Inline images and attachments are saved alongside it and linked by full path, so an AI coding agent can actually open them.</p>
+            <div class="feature-example">
+              <code>PROJ-1234_Fix_login_bug.md</code>
             </div>
           </div>
         </div>
@@ -198,6 +220,12 @@
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#00875A" stroke-width="2">
                   <polyline points="20 6 9 17 4 12"></polyline>
                 </svg>
+                <span>Export a full ticket to Markdown</span>
+              </li>
+              <li>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#00875A" stroke-width="2">
+                  <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
                 <span>Enable/disable individual buttons</span>
               </li>
               <li>
@@ -253,16 +281,20 @@
           </div>
           <h2>Privacy First</h2>
           <p class="privacy-description">
-            Your data never leaves your browser. No tracking, no analytics, no accounts required.
+            Your ticket data goes nowhere but your own machine. No tracking, no analytics, no accounts required.
           </p>
           <div class="privacy-grid">
             <div class="privacy-item">
               <h4>🔒 Local Processing</h4>
-              <p>Everything runs locally in your browser</p>
+              <p>Copying and Markdown conversion happen in your browser</p>
             </div>
             <div class="privacy-item">
-              <h4>🚫 No Data Collection</h4>
-              <p>Zero data sent to external servers</p>
+              <h4>🚫 No Third Parties</h4>
+              <p>The Markdown export reads your ticket from your own JIRA site, using the session you are already signed in to. Nothing is sent anywhere else.</p>
+            </div>
+            <div class="privacy-item">
+              <h4>✋ Optional Permissions</h4>
+              <p>Saving a ticket's attachments needs a downloads permission that is only requested if you turn that feature on — never on install.</p>
             </div>
             <div class="privacy-item">
               <h4>🌐 JIRA Only</h4>

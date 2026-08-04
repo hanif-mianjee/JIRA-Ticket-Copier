@@ -41,6 +41,14 @@ Follow these steps to prepare the JIRA Ticket Copier extension for submission:
    - Go to [Chrome Web Store Developer Dashboard](https://chrome.google.com/webstore/devconsole)
    - Upload the ZIP file.
    - Fill out extension details, upload icons, and provide screenshots.
+   - Permission justifications to supply:
+     - `clipboardWrite` — writes the ticket info, commit message, or link the user asked to copy.
+     - `storage` — stores the user's format templates and per-button toggles (chrome.storage.sync).
+     - `downloads` (optional) — saves the ticket's own attachments next to the exported Markdown file.
+       Declared under `optional_permissions`, so it is requested only when the user enables
+       "Download attachments" in the options page, never on install or update.
+     - `https://*.atlassian.net/*` — the extension only runs on JIRA Cloud; the Markdown export reads
+       the ticket from the user's own site via its REST API using their existing session.
    - Submit for review.
 
 4. **After Submission**

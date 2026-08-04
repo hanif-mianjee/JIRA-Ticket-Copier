@@ -116,6 +116,37 @@ Review suggestions applied</textarea>
           <div class="help-text">Enable copy buttons on JIRA list and board views</div>
         </section>
 
+        <section class="settings-section">
+          <div class="section-header">
+            <h2>Export Markdown Button</h2>
+            <label class="toggle-switch">
+              <input id="enableExportButton" type="checkbox" />
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+          <div class="help-text">
+            Download the whole ticket as a Markdown file — description, custom fields, linked and child work
+            items, attachments and every comment. The file is named <code>PROJ-1234_Ticket_title.md</code> and
+            saved to your downloads folder, ready to hand to an AI coding agent.
+          </div>
+
+          <div class="sub-setting">
+            <div class="sub-setting-header">
+              <label for="enableAttachmentDownload" class="sub-setting-title">Download attachments</label>
+              <label class="toggle-switch">
+                <input id="enableAttachmentDownload" type="checkbox" />
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+            <div class="help-text">
+              Also save the ticket's images and files into a <code>PROJ-1234_files/</code> folder next to the
+              Markdown file, and link to them by their full path on disk. Without this, images and attachments
+              are links that need a Jira login, so an AI agent cannot open them.
+              Chrome will ask permission to manage your downloads the first time you switch this on.
+            </div>
+          </div>
+        </section>
+
         <div class="variables-info">
           <h3>Available Variables</h3>
           <div class="variables-grid" id="variablesGrid">

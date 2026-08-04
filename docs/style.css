@@ -323,6 +323,7 @@ code {
 
 .mockup-btn.icon.github { background: #42526E; }
 .mockup-btn.icon.link { background: #42526E; }
+.mockup-btn.icon.download { background: #42526E; }
 
 .mockup-title {
   font-size: 18px;
@@ -364,7 +365,7 @@ code {
 
 .features-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
   gap: 32px;
 }
 
@@ -394,6 +395,7 @@ code {
 .feature-icon.blue { background: rgba(0, 82, 204, 0.1); color: var(--color-primary); }
 .feature-icon.purple { background: rgba(101, 84, 192, 0.1); color: var(--color-purple); }
 .feature-icon.green { background: rgba(0, 135, 90, 0.1); color: var(--color-success); }
+.feature-icon.teal { background: rgba(66, 82, 110, 0.1); color: #42526E; }
 
 .feature-card h3 {
   font-size: 20px;
@@ -605,7 +607,7 @@ code {
 
 .privacy-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 32px;
   max-width: 900px;
   margin: 0 auto;

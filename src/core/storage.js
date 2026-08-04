@@ -10,6 +10,7 @@ const DEFAULT_SETTINGS = {
   enableTicketInfo: true,
   enableGitButton: true,
   enableLinkButton: true,
+  enableExportButton: true,
   enableListView: true,
 };
 
@@ -29,15 +30,39 @@ export function getFormat(key) {
   });
 }
 
-export function getSetting(key) {
+/**
+ * Read a boolean setting.
+ * @param {string} key - Storage key.
+ * @param {boolean} [defaultValue=true] - Value to use when nothing is stored.
+ *   Button toggles default to true; opt-in flags pass false.
+ * @returns {Promise<boolean>} The stored value, or the default.
+ */
+export function getSetting(key, defaultValue = true) {
   return new Promise((resolve) => {
     if (!isStorageAvailable()) {
-      resolve(DEFAULT_SETTINGS[key] !== false);
+      const fallback = key in DEFAULT_SETTINGS ? DEFAULT_SETTINGS[key] : defaultValue;
+      resolve(fallback !== false);
       return;
     }
     chrome.storage.sync.get([key], (result) => {
-      resolve(result[key] !== false);
+      resolve(result[key] === undefined ? defaultValue : result[key] !== false);
     });
+  });
+}
+
+/**
+ * Store a boolean setting.
+ * @param {string} key - Storage key.
+ * @param {boolean} value - Value to store.
+ * @returns {Promise<void>} Resolves once written, or immediately if unavailable.
+ */
+export function setSetting(key, value) {
+  return new Promise((resolve) => {
+    if (!isStorageAvailable()) {
+      resolve();
+      return;
+    }
+    chrome.storage.sync.set({ [key]: value }, () => resolve());
   });
 }
 
