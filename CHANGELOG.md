@@ -2,6 +2,23 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [0.5.0](https://github.com/hanif-mianjee/JIRA-Ticket-Copier/compare/v0.3.0...v0.5.0) (2026-11-19)
+
+
+### Features
+
+* export JIRA ticket to Markdown with attachments ([162c3b6](https://github.com/hanif-mianjee/JIRA-Ticket-Copier/commit/162c3b609e7672f29bf05dbbbabf7a96b02eaf70))
+* export sub-tasks as linked files, weekly filter menu and search results copy ([904d984](https://github.com/hanif-mianjee/JIRA-Ticket-Copier/commit/904d984c13502afe2c64adf7ddea23d337f4f733))
+
+
+### Bug Fixes
+
+* address memory leaks, debounce DOM observer, consolidate STATUS_LIST, prevent duplicate styles, and support SPA navigation ([c405a6d](https://github.com/hanif-mianjee/JIRA-Ticket-Copier/commit/c405a6dd9ba1f5d47ea8d18f0d17354f8d406e0e))
+* match button style with JIRA ([1bce66e](https://github.com/hanif-mianjee/JIRA-Ticket-Copier/commit/1bce66e64cb86df1f796bba0c89922dee26c6fd1))
+* options page ([5038680](https://github.com/hanif-mianjee/JIRA-Ticket-Copier/commit/5038680758904b7a47a392378a830193be79aa31))
+* toggle button settings ([de8306f](https://github.com/hanif-mianjee/JIRA-Ticket-Copier/commit/de8306fa317a6200dd994876ca18b0fde3509453))
+* versioned zip packaging ([e9dc9f9](https://github.com/hanif-mianjee/JIRA-Ticket-Copier/commit/e9dc9f94f1762a1bee35eff36d8f5d4e92886fe8))
+
 ## [0.4.0](https://github.com/hanif-mianjee/JIRA-Ticket-Copier/compare/v0.3.0...v0.4.0) (2026-08-04)
 
 
