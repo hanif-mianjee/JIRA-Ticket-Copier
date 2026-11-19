@@ -1,15 +1,17 @@
 import { fetchIssueBundle, isIssueKey } from "./jira-api.js";
-import { buildTicketFromRest, readBundleAttachments, readBundleIdentity } from "./issue-model.js";
+import { buildTicketFromRest, readBundleAttachments, readBundleIdentity, readBundleSubtaskKeys } from "./issue-model.js";
 import { readIssueFromDom } from "./issue-dom.js";
-import { hasDownloadPermission, openOptionsPage, saveTicketAssets } from "./assets.js";
+import { directoryOf, hasDownloadPermission, openOptionsPage, requestAssetDownload, saveTicketAssets } from "./assets.js";
 import { getSetting, setSetting } from "./storage.js";
 import { escapeMarkdown, joinBlocks, linkTarget, normalizeMarkdown, yamlList, yamlScalar } from "./markdown-utils.js";
+import { copyText } from "./clipboard.js";
 import { showAttachmentPrompt } from "../ui/export-modal.js";
 import { COLORS } from "../ui/styles.js";
 
 const MAX_FILENAME_LENGTH = 147;
 const FALLBACK_FILENAME = "jira-ticket.md";
 const SPINNER_CLASS = "jira-copier-spinner";
+const OPT_IN_HINT = "Attachments were not downloaded, so images and files link to Jira and need a login. Enable \"Download attachments\" in the extension options to save them alongside this file.";
 
 /**
  * Build the download file name from the ticket key and title.
@@ -50,7 +52,7 @@ export function buildTicketMarkdown(ticket, exportedAt) {
 
   blocks.push(buildOtherFields(ticket.otherFields));
   blocks.push(buildLinks(ticket.links));
-  blocks.push(buildChildren(ticket.children));
+  blocks.push(buildChildren(ticket.children, ticket.childFiles));
   blocks.push(buildAttachments(ticket.attachments));
   blocks.push(buildRemoteLinks(ticket.remoteLinks));
   blocks.push(buildComments(ticket.comments));
@@ -69,6 +71,7 @@ function buildFrontmatter(ticket, exportedAt) {
     ["assignee", ticket.assignee],
     ["reporter", ticket.reporter],
     ["parent", ticket.parent],
+    ["parent_file", ticket.parentFile],
     ["priority", ticket.priority],
     ["story_points", ticket.storyPoints],
     ["sprint", ticket.sprint],
@@ -119,10 +122,14 @@ function buildLinks(links) {
   return joinBlocks(["## Linked Work Items", table]);
 }
 
-function buildChildren(children) {
+function buildChildren(children, childFiles) {
   if (!children || children.length === 0) return "";
   const rows = children.map((child) => {
-    const key = child.url ? `[${cellText(child.key)}](${child.url})` : cellText(child.key);
+    // A sub-task exported alongside this file links to that file; the rest link to Jira.
+    const localFile = childFiles ? childFiles.get(child.key) : "";
+    let key = cellText(child.key);
+    if (localFile) key = `[${key}](${linkTarget(localFile)})`;
+    else if (child.url) key = `[${key}](${child.url})`;
     return `| ${key} | ${cellText(child.summary)} | ${cellText(child.status)} |`;
   });
   const table = ["| Key | Summary | Status |", "| --- | --- | --- |", ...rows].join("\n");
@@ -262,23 +269,22 @@ export async function exportTicketMarkdown(info, btn, feedback) {
   // the button updates are skipped once it is detached.
   const stillOnPage = () => btn.isConnected !== false;
 
-  let ticket;
+  let tickets;
   try {
     const bundle = await fetchIssueBundle(info.ticketId);
+    const subtasks = await fetchSubtaskBundles(bundle);
     // Attachments are saved before the Markdown is written, so the images and
     // file links in it can point at the copies on disk.
-    const assets = await saveAssetsIfEnabled(bundle, info, btn, feedback);
+    const assets = await saveAssetsIfEnabled(bundle, subtasks.bundles, info, btn, feedback);
     if (assets.cancelled) {
       stopLoading(btn);
       return;
     }
-    ticket = buildTicketFromRest(bundle, info, { assetPaths: assets.assetPaths });
-    ticket.assetDir = assets.assetDir;
-    ticket.warnings = ticket.warnings.concat(assets.warnings);
+    tickets = buildExportTickets(bundle, subtasks, assets, info);
   } catch (error) {
     console.warn("[JIRA Ticket Copier] Jira API unavailable, exporting from the page:", error);
     try {
-      ticket = readIssueFromDom(document, info);
+      tickets = [readIssueFromDom(document, info)];
     } catch (domError) {
       console.error("[JIRA Ticket Copier] Export failed:", domError);
       stopLoading(btn);
@@ -287,43 +293,167 @@ export async function exportTicketMarkdown(info, btn, feedback) {
     }
   }
 
-  stopLoading(btn);
-
   try {
-    const markdown = buildTicketMarkdown(ticket, new Date().toISOString());
-    downloadMarkdown(buildExportFilename(ticket.key, ticket.title), markdown);
+    const exportedAt = new Date().toISOString();
+    const mainFile = await saveMarkdownFiles(tickets.map((ticket) => ({
+      filename: buildExportFilename(ticket.key, ticket.title),
+      markdown: buildTicketMarkdown(ticket, exportedAt),
+    })));
+    stopLoading(btn);
+    await copyExportPath(mainFile);
     if (stillOnPage()) feedback.success(btn);
   } catch (error) {
     console.error("[JIRA Ticket Copier] Export failed:", error);
+    stopLoading(btn);
     if (stillOnPage()) feedback.fail(btn);
   }
 }
 
 /**
- * Save the ticket's attachments. Opting in is the optional downloads permission
- * itself, which the service worker checks, so there is no separate flag to keep
- * in sync. Any failure is reported in the file rather than stopping the export.
- *
- * When the ticket has attachments but the permission is missing, the user is asked
- * once what to do, unless they have chosen not to be asked again.
- * @returns {Promise<Object>} {assetPaths, assetDir, warnings, cancelled}.
+ * Fetch every sub-task in full, unless the user turned sub-task export off.
+ * One sub-task failing — a restricted issue, say — only adds a warning, because
+ * the rest of the export is still worth having.
+ * @returns {Promise<Object>} {bundles: [{key, bundle}], warnings}.
  */
-async function saveAssetsIfEnabled(bundle, info, btn, feedback) {
-  const empty = { assetPaths: null, assetDir: "", warnings: [], cancelled: false };
+async function fetchSubtaskBundles(bundle) {
+  const result = { bundles: [], warnings: [] };
+  const keys = readBundleSubtaskKeys(bundle);
+  if (keys.length === 0 || !(await getSetting("enableSubtaskExport"))) return result;
+
+  const outcomes = await Promise.allSettled(keys.map((key) => fetchIssueBundle(key)));
+  outcomes.forEach((outcome, index) => {
+    if (outcome.status === "fulfilled") {
+      result.bundles.push({ key: keys[index], bundle: outcome.value });
+      return;
+    }
+    const reason = (outcome.reason && outcome.reason.message) || String(outcome.reason);
+    result.warnings.push(`Sub-task ${keys[index]} could not be exported, so it links to Jira instead: ${reason}`);
+  });
+  return result;
+}
+
+/**
+ * Build the parent and each sub-task as its own ticket, linked to one another.
+ * Every file is saved to the downloads folder, so the links can be worked out
+ * before anything is written: absolute once the folder is known from a saved
+ * attachment, relative otherwise.
+ * @returns {Array} The parent ticket first, then its sub-tasks.
+ */
+function buildExportTickets(bundle, subtasks, assets, info) {
+  const parent = buildTicketFromRest(bundle, info, { assetPaths: assets.assetPaths });
+  parent.assetDir = assets.assetDir;
+  parent.warnings = parent.warnings.concat(subtasks.warnings, assets.warnings);
+
+  const children = subtasks.bundles.map((entry) => {
+    const saved = assets.subtasks.get(entry.key) || {};
+    const subtaskInfo = { ticketId: entry.key, title: "", status: "", ticketUrl: info.ticketUrl };
+    const ticket = buildTicketFromRest(entry.bundle, subtaskInfo, { assetPaths: saved.assetPaths });
+    ticket.assetDir = saved.assetDir || "";
+    ticket.warnings = ticket.warnings.concat(saved.warnings || []);
+    return ticket;
+  });
+
+  const linkTo = (ticket) => {
+    const filename = buildExportFilename(ticket.key, ticket.title);
+    return assets.downloadDir ? joinPath(assets.downloadDir, filename) : `./${filename}`;
+  };
+  parent.childFiles = new Map(children.map((child) => [child.key, linkTo(child)]));
+  children.forEach((child) => {
+    child.parentFile = linkTo(parent);
+  });
+
+  return [parent, ...children];
+}
+
+function joinPath(directory, filename) {
+  const separator = directory.includes("\\") ? "\\" : "/";
+  return `${directory}${separator}${filename}`;
+}
+
+/**
+ * Save the exported Markdown files. With the downloads permission they go
+ * through the downloads API, which writes them under fixed names, overwriting an
+ * earlier export, and reports where they landed. That keeps the links between
+ * them and the copied path correct, and Chrome does not ask whether the site may
+ * download multiple files. Without it, or for any file it could not save, each
+ * file is a plain link download.
+ * @param {Array} files - [{filename, markdown}], the main ticket first.
+ * @returns {Promise<string>} The main file's absolute path, or its name when unknown.
+ */
+async function saveMarkdownFiles(files) {
+  let remaining = files;
+  const savedPaths = new Map();
+
+  if (await hasDownloadPermission()) {
+    const result = await requestAssetDownload(files.map((file) => ({
+      url: `data:text/markdown;charset=utf-8,${encodeURIComponent(file.markdown)}`,
+      path: file.filename,
+    })));
+    (result.saved || []).forEach((entry) => {
+      if (typeof entry === "string") savedPaths.set(entry, "");
+      else savedPaths.set(entry.path, entry.absolutePath || "");
+    });
+    remaining = files.filter((file) => !savedPaths.has(file.filename));
+  }
+
+  remaining.forEach((file) => downloadMarkdown(file.filename, file.markdown));
+  return savedPaths.get(files[0].filename) || files[0].filename;
+}
+
+/**
+ * Put the main file's path on the clipboard, ready to hand to an AI agent.
+ * A failure here never fails the export: the file is already saved.
+ * @param {string} path - Absolute path, or the file name when Chrome did not say.
+ */
+async function copyExportPath(path) {
+  if (!(await getSetting("enableExportPathCopy"))) return;
+  try {
+    await copyText(path);
+  } catch (error) {
+    console.warn("[JIRA Ticket Copier] Could not copy the exported file's path:", error);
+  }
+}
+
+/**
+ * Save the attachments of the ticket and of each exported sub-task, each into
+ * its own "KEY_files" folder, exactly as if the sub-task had been exported on
+ * its own. Opting in is the optional downloads permission itself, which the
+ * service worker checks, so there is no separate flag to keep in sync. Any
+ * failure is reported in the file rather than stopping the export.
+ *
+ * When there are attachments but the permission is missing, the user is asked
+ * once what to do, unless they have chosen not to be asked again.
+ * @returns {Promise<Object>} {assetPaths, assetDir, subtasks, downloadDir, warnings, cancelled},
+ *   where subtasks maps a sub-task key to its own {assetPaths, assetDir, warnings}.
+ */
+async function saveAssetsIfEnabled(bundle, subtaskBundles, info, btn, feedback) {
+  const empty = { assetPaths: null, assetDir: "", subtasks: new Map(), downloadDir: "", warnings: [], cancelled: false };
   const attachments = readBundleAttachments(bundle);
-  if (attachments.length === 0) return empty;
+  const subtaskAttachments = subtaskBundles
+    .map((entry) => ({ key: entry.key, attachments: readBundleAttachments(entry.bundle) }))
+    .filter((entry) => entry.attachments.length > 0);
+  if (attachments.length === 0 && subtaskAttachments.length === 0) return empty;
 
   const { key } = readBundleIdentity(bundle, info);
+  const optedOut = () => withOptInHint(empty, attachments, subtaskAttachments);
 
   if (!(await hasDownloadPermission())) {
-    if (await getSetting("hideAttachmentPrompt", false)) return withOptInHint(empty);
+    if (await getSetting("hideAttachmentPrompt", false)) return optedOut();
 
     // Stand the spinner down while the user decides. resetContent owns restoring
     // the icon, so the feedback handler does it rather than stopLoading.
     stopLoading(btn);
     if (feedback.reset) feedback.reset(btn);
 
-    const { action, remember } = await showAttachmentPrompt({ ticketId: key, attachments });
+    // A sub-task's files are listed under its key, so it is clear where each belongs.
+    const listed = attachments.concat(...subtaskAttachments.map((entry) => entry.attachments.map((file) => (
+      { ...file, filename: `${entry.key} / ${file.filename}` }
+    ))));
+    const { action, remember } = await showAttachmentPrompt({
+      ticketId: key,
+      attachments: listed,
+      includesSubtasks: subtaskAttachments.length > 0,
+    });
     if (remember) await setSetting("hideAttachmentPrompt", true);
 
     if (action === "settings") {
@@ -333,23 +463,29 @@ async function saveAssetsIfEnabled(bundle, info, btn, feedback) {
     if (action === "cancel") return { ...empty, cancelled: true };
 
     startLoading(btn);
-    return withOptInHint(empty);
+    return optedOut();
   }
 
   try {
-    const { assetPaths, assetDir, warnings } = await saveTicketAssets(key, attachments);
-    return { assetPaths, assetDir, warnings, cancelled: false };
+    const parent = await saveTicketAssets(key, attachments);
+    const result = { ...empty, assetPaths: parent.assetPaths, assetDir: parent.assetDir, warnings: parent.warnings };
+
+    for (const entry of subtaskAttachments) {
+      result.subtasks.set(entry.key, await saveTicketAssets(entry.key, entry.attachments));
+    }
+
+    const knownDir = [result.assetDir, ...[...result.subtasks.values()].map((saved) => saved.assetDir)].find(Boolean);
+    result.downloadDir = knownDir ? directoryOf(knownDir) : "";
+    return result;
   } catch (error) {
     console.warn("[JIRA Ticket Copier] Could not download attachments:", error);
     return { ...empty, warnings: ["Attachments could not be downloaded, so they still link to Jira."] };
   }
 }
 
-function withOptInHint(result) {
-  return {
-    ...result,
-    warnings: ["Attachments were not downloaded, so images and files link to Jira and need a login. Enable \"Download attachments\" in the extension options to save them alongside this file."],
-  };
+function withOptInHint(result, attachments, subtaskAttachments) {
+  const subtasks = new Map(subtaskAttachments.map((entry) => [entry.key, { warnings: [OPT_IN_HINT] }]));
+  return { ...result, subtasks, warnings: attachments.length > 0 ? [OPT_IN_HINT] : [] };
 }
 
 function startLoading(btn) {

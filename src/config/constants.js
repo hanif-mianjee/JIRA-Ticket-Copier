@@ -1,9 +1,11 @@
 // UI Text Constants - Centralized for easy maintenance
 export const BUTTON_TEXT = {
   copyTicketInfo: "Copy Info",
+  copyIssueList: "Copy list",
   copied: "✓ Copied!",
   failed: "✗ Failed",
   statusNotFound: "No status found",
+  noResults: "No results",
 };
 
 // Feedback timing (in milliseconds)

@@ -219,6 +219,11 @@ form {
   transition: var(--transition);
 }
 
+.preview-multiline {
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
 .preview-box:not(:empty) {
   background: rgba(0, 135, 90, 0.08);
   border-color: var(--color-success);

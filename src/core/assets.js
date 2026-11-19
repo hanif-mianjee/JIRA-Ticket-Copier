@@ -166,7 +166,12 @@ export async function saveTicketAssets(ticketKey, attachments) {
   return { assetPaths: assetPaths.size > 0 ? assetPaths : null, folder, assetDir, warnings };
 }
 
-function directoryOf(absolutePath) {
+/**
+ * Directory part of an absolute path, on either platform.
+ * @param {string} absolutePath - A file or folder path.
+ * @returns {string} The containing directory, or "" when there is none.
+ */
+export function directoryOf(absolutePath) {
   const separator = absolutePath.includes("\\") ? "\\" : "/";
   const index = absolutePath.lastIndexOf(separator);
   return index > 0 ? absolutePath.slice(0, index) : "";

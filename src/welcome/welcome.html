@@ -43,17 +43,28 @@
               <h4>List View Support</h4>
               <p>Copy buttons directly on JIRA board and list views</p>
             </div>
+            <div class="feature-card">
+              <div class="feature-icon blue">📝</div>
+              <h4>Copy Search Results <span class="feature-badge">New</span></h4>
+              <p>A <strong>Copy list</strong> button on search and filter pages copies every result as <code>• PROJ-1234: Title</code>, one per line</p>
+            </div>
+            <div class="feature-card">
+              <div class="feature-icon yellow">📅</div>
+              <h4>Weekly Filter <span class="feature-badge">New</span></h4>
+              <p>Click the extension icon in the toolbar to open the work you finished in the last 7 days, dates already filled in</p>
+            </div>
             <div class="feature-card feature-card-wide">
               <div class="feature-icon teal">📥</div>
-              <h4>Export as Markdown <span class="feature-badge">New</span></h4>
+              <h4>Export as Markdown <span class="feature-badge">Now with sub-tasks</span></h4>
               <p>
-                Download the whole ticket as one Markdown file — description, acceptance criteria, custom fields,
-                linked and child work items and every comment and reply, with code blocks and tables preserved.
+                Download the whole ticket as a Markdown file — description, acceptance criteria, custom fields,
+                linked and child work items and every comment and reply, with code blocks and tables preserved —
+                and each sub-task as its own file, linked from the parent. The main file's path is copied for you.
                 Saved as <code>PROJ-1234_Ticket_title.md</code>, ready to hand to Claude Code.
                 Switch on <strong>Download attachments</strong> in Settings and the ticket's inline images and
-                files are saved into a <code>PROJ-1234_files/</code> folder beside it, linked by their full path
-                on disk — so the file works wherever you put it, and an AI agent can open the images without a
-                Jira login.
+                files are saved into a <code>PROJ-1234_files/</code> folder beside it — each sub-task's into its own
+                <code>_files</code> folder — linked by their full path on disk, so the file works wherever you put it,
+                and an AI agent can open the images without a Jira login.
               </p>
             </div>
           </div>
@@ -103,6 +114,10 @@
             <li>Exported files land in your downloads folder, so you can point an AI coding agent straight at them</li>
             <li>Turn on <strong>Download attachments</strong> in Settings to save a ticket's images and files next to the export — Chrome asks permission once, and everything else keeps working if you decline</li>
             <li>Exporting a ticket that has attachments will offer to set this up for you the first time, so nothing is silently left out</li>
+            <li>Each sub-task is exported as its own file, and the Child Work Items table links straight to it — switch this off with <strong>Include sub-tasks</strong> in Settings</li>
+            <li>After an export, paste: the main file's full path is already on your clipboard, ready for Claude Code</li>
+            <li>For a weekly report: click the toolbar icon → <strong>Weekly filter</strong>, then <strong>Copy list</strong> on the results page</li>
+            <li>Change the weekly filter's number of days or its JQL in Settings — set your <strong>Jira site</strong> there to use it from any tab</li>
             <li>Enable/disable individual buttons based on your workflow</li>
             <li>All settings are synced across your Chrome browsers</li>
           </ul>

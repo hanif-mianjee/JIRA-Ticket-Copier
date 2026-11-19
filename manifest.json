@@ -29,6 +29,7 @@
   ],
   "action": {
     "default_title": "JIRA Ticket Copier - Copy ticket info with one click",
+    "default_popup": "dist/popup/popup.html",
     "default_icon": {
       "16": "dist/icons/icon16.png",
       "48": "dist/icons/icon48.png",

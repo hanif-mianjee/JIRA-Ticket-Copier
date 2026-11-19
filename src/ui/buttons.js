@@ -7,8 +7,10 @@ import {
   mainButtonFeedback,
   createIconButtonFeedback,
   createListButtonFeedback,
+  createTextButtonFeedback,
 } from "../core/clipboard.js";
 import { exportTicketMarkdown } from "../core/export.js";
+import { copyIssueList } from "../core/issue-list.js";
 import { BUTTON_TEXT } from "../config/constants.js";
 
 const EXPORT_STYLES_ID = "jira-copier-export-styles";
@@ -112,6 +114,36 @@ export function createExportButton(getInfo) {
     const info = getInfo();
     exportTicketMarkdown(info, btn, feedback);
   };
+
+  return btn;
+}
+
+/**
+ * Button for a search results page that copies every result, one line each.
+ * @param {Function} getIssues - Returns the issues on the page at click time.
+ * @returns {HTMLButtonElement} The button.
+ */
+export function createIssueListButton(getIssues) {
+  const btn = document.createElement("button");
+  btn.id = "jira-issue-list-copy-btn";
+  btn.type = "button";
+  btn.textContent = BUTTON_TEXT.copyIssueList;
+  btn.setAttribute("aria-label", "Copy search results to clipboard");
+  btn.setAttribute("tabindex", "0");
+  btn.title = "Copy every result on this page, one line each";
+  setButtonStyle(btn, true);
+  // Sized to sit level with Jira's own header buttons.
+  Object.assign(btn.style, {
+    borderRadius: "3px",
+    height: "32px",
+    display: "inline-flex",
+    alignItems: "center",
+    whiteSpace: "nowrap",
+  });
+
+  const feedback = createTextButtonFeedback(BUTTON_TEXT.copyIssueList);
+
+  btn.onclick = () => copyIssueList(getIssues(), btn, feedback);
 
   return btn;
 }

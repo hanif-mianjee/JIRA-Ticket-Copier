@@ -162,6 +162,24 @@ describe("buildTicketMarkdown", () => {
     expect(output).toContain("| Query | a \\| b |");
   });
 
+  it("links a child exported alongside to its file, and the rest to Jira", () => {
+    const children = [
+      { key: "YO-519", summary: "Parser", status: "Done", url: "https://site.atlassian.net/browse/YO-519" },
+      { key: "YO-520", summary: "Other", status: "To Do", url: "https://site.atlassian.net/browse/YO-520" },
+    ];
+    const childFiles = new Map([["YO-519", "/Users/me/My Downloads/YO-519_Parser.md"]]);
+    const output = buildTicketMarkdown(ticket({ children, childFiles }));
+
+    // A path with a space is wrapped so the link still parses.
+    expect(output).toContain("| [YO-519](</Users/me/My Downloads/YO-519_Parser.md>) | Parser | Done |");
+    expect(output).toContain("| [YO-520](https://site.atlassian.net/browse/YO-520) | Other | To Do |");
+  });
+
+  it("records the parent's file in a sub-task's frontmatter", () => {
+    const output = buildTicketMarkdown(ticket({ parent: "YO-518 Parent", parentFile: "./YO-518_Parent.md" }));
+    expect(output).toContain("parent: YO-518 Parent\nparent_file: \"./YO-518_Parent.md\"");
+  });
+
   it("flags a degraded export in the frontmatter and notes", () => {
     const output = buildTicketMarkdown(ticket({ degraded: true, warnings: ["API unavailable"] }));
     expect(output).toContain("export_source: page");

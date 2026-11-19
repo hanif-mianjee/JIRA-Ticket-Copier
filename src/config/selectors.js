@@ -55,6 +55,21 @@ export const PAGE_CONFIGS = [
     buttonClass: "jira-list-copy-link-btn",
     settingKey: "enableListView",
   },
+  {
+    // Issue search and saved filter results, e.g. /issues?jql=... or /issues/?filter=123.
+    // An issueRow selector puts the config in results mode: one button group for
+    // the whole page, appended to the header's action bar.
+    id: "issue-search",
+    urlPattern: /\/issues(\/|\?|$)/,
+    selectors: {
+      actionBarItem: "[data-testid=\"issue-navigator-action-meatball-menu.ui.menu-trigger\"], [data-testid=\"actions-pluggable-items.ui.filter-button--trigger\"]",
+      issueRow: "tr[data-testid=\"native-issue-table.ui.issue-row\"]",
+      issueKey: "[data-testid=\"native-issue-table.common.ui.issue-cells.issue-key.issue-key-cell\"]",
+      issueSummary: "[data-testid=\"native-issue-table.common.ui.issue-cells.issue-summary.issue-summary-cell\"]",
+    },
+    buttons: ["copyIssueList"],
+    groupId: "jira-issue-list-copier-group",
+  },
 ];
 
 // Selectors used by the Markdown exporter to read the rendered issue view.

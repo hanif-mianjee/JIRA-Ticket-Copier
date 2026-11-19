@@ -6,6 +6,8 @@ const ISSUE_KEY_PATTERN = /^[A-Z][A-Z0-9_]*-\d+$/;
 const COMMENT_PAGE_SIZE = 100;
 const MAX_COMMENT_PAGES = 10;
 const REQUEST_TIMEOUT_MS = 15000;
+// Short, because a copy button waits on it with the user watching.
+const SUMMARY_TIMEOUT_MS = 5000;
 
 export class JiraApiError extends Error {
   constructor(status, url, message) {
@@ -63,6 +65,33 @@ export async function fetchIssueBundle(issueKey, options = {}) {
       remoteLinks,
       warnings,
     };
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
+/**
+ * Fetch just an issue's summary and status, for a view that does not show them.
+ * Never throws: on any failure both come back empty and the caller reports a
+ * missing value exactly as it would have without this lookup.
+ * @param {string} issueKey - The issue key.
+ * @param {Object} [options] - Fetch options.
+ * @param {string} [options.origin] - Site origin; defaults to the current page.
+ * @returns {Promise<Object>} {title, status}.
+ */
+export async function fetchIssueSummary(issueKey, options = {}) {
+  const empty = { title: "", status: "" };
+  if (!isIssueKey(issueKey)) return empty;
+
+  const origin = options.origin || window.location.origin;
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), SUMMARY_TIMEOUT_MS);
+  try {
+    const issue = await getJson(`${origin}/rest/api/3/issue/${encodeURIComponent(issueKey)}?fields=summary,status`, controller.signal);
+    const fields = issue.fields || {};
+    return { title: fields.summary || "", status: (fields.status && fields.status.name) || "" };
+  } catch {
+    return empty;
   } finally {
     clearTimeout(timeout);
   }

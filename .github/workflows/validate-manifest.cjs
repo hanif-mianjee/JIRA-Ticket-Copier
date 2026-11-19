@@ -27,5 +27,6 @@ manifest.content_scripts.forEach((cs) => {
   cs.js.forEach(checkFile);
 });
 Object.values(manifest.icons).forEach(checkFile);
+if (manifest.action && manifest.action.default_popup) checkFile(manifest.action.default_popup);
 
 console.log('Manifest validation passed.');

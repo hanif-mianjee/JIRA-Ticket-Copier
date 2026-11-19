@@ -2,7 +2,15 @@ import { PAGE_CONFIGS } from "./config/selectors.js";
 import { OBSERVER_DEBOUNCE_MS } from "./config/constants.js";
 import { getSetting, getSettings } from "./core/storage.js";
 import { copyTicketInfo, mainButtonFeedback } from "./core/clipboard.js";
-import { createCopyButton, createExportButton, createGitButton, createLinkButton, createListLinkButton } from "./ui/buttons.js";
+import { findActionBar, readIssueList } from "./core/issue-list.js";
+import {
+  createCopyButton,
+  createExportButton,
+  createGitButton,
+  createIssueListButton,
+  createLinkButton,
+  createListLinkButton,
+} from "./ui/buttons.js";
 import { createDropdown } from "./ui/dropdown.js";
 
 // Button name to setting key mapping
@@ -13,6 +21,7 @@ const BUTTON_SETTINGS = {
   linkButton: "enableLinkButton",
   exportButton: "enableExportButton",
   listLinkButton: "enableListView", // Already handled at page level
+  copyIssueList: "enableIssueListCopy",
 };
 
 console.log("[JIRA Ticket Copier] Content script loaded");
@@ -88,6 +97,7 @@ const BUTTON_CREATORS = {
   linkButton: (getInfo) => createLinkButton(getInfo),
   exportButton: (getInfo) => createExportButton(getInfo),
   listLinkButton: (getInfo) => createListLinkButton(getInfo),
+  copyIssueList: (getInfo) => createIssueListButton(getInfo),
 };
 
 async function createButtonGroup(config, getInfo, parent) {
@@ -103,7 +113,9 @@ async function createButtonGroup(config, getInfo, parent) {
   
   // Only create group if there are enabled buttons
   if (enabledButtons.length === 0) return;
-  
+  // The initial check and the observer can both get here while settings load.
+  if (document.getElementById(config.groupId)) return;
+
   const group = document.createElement("div");
   group.id = config.groupId;
   Object.assign(group.style, { marginLeft: "8px", display: "inline-flex", alignItems: "center" });
@@ -127,17 +139,40 @@ async function createButtonGroup(config, getInfo, parent) {
 async function injectSinglePageButtons(config) {
   if (document.getElementById(config.groupId)) return;
 
-  const container = document.querySelector(config.selectors.container);
-  if (!container) return;
-
+  // The ticket key is what shows an issue view has rendered. The status field is
+  // not required: the board's issue popup no longer renders it where the
+  // selectors expect, and the copy buttons fetch a missing status at click time.
   const info = extractInfo(config.selectors);
-  if (!info.status) return;
+  if (!info.ticketId) return;
 
   const insertAfter = document.querySelector(config.selectors.insertAfter);
-  const parent = insertAfter?.parentNode || container.parentNode;
+  const container = document.querySelector(config.selectors.container);
+  const parent = insertAfter?.parentNode || container?.parentNode;
+  if (!parent) return;
+
   const getInfo = () => extractInfo(config.selectors);
 
   await createButtonGroup(config, getInfo, parent);
+}
+
+async function injectResultsButtons(config) {
+  if (document.getElementById(config.groupId)) return;
+
+  const actionBar = findActionBar(config.selectors.actionBarItem);
+  if (!actionBar) return;
+
+  await createButtonGroup(config, () => readIssueList(config.selectors), actionBar);
+}
+
+/**
+ * Pick the injection strategy a page config calls for.
+ * @param {Object} config - Page configuration.
+ * @returns {Function} The injection function.
+ */
+function injectorFor(config) {
+  if (config.selectors.row) return injectListButtons;
+  if (config.selectors.issueRow) return injectResultsButtons;
+  return injectSinglePageButtons;
 }
 
 async function injectListButtons(config) {
@@ -252,7 +287,7 @@ setupSPADetection();
 // Set up observers for all matching page configs
 PAGE_CONFIGS.forEach((config) => {
   const isListView = !!config.selectors.row;
-  const injectFn = isListView ? injectListButtons : injectSinglePageButtons;
+  const injectFn = injectorFor(config);
 
   // For list views, we already handle setting check in injectListButtons
   // For other views, check if any button in the config might be enabled

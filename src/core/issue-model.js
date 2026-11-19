@@ -30,6 +30,17 @@ export function readBundleAttachments(bundle) {
 }
 
 /**
+ * Read the keys of a ticket's sub-tasks from a REST bundle.
+ * @param {Object} bundle - Result of fetchIssueBundle.
+ * @returns {string[]} Sub-task issue keys, in Jira's order.
+ */
+export function readBundleSubtaskKeys(bundle) {
+  const fields = ((bundle || {}).issue || {}).fields || {};
+  if (!Array.isArray(fields.subtasks)) return [];
+  return fields.subtasks.map((task) => (task && task.key) || "").filter(Boolean);
+}
+
+/**
  * Read the key and summary from a REST bundle, falling back to scraped info.
  * @param {Object} bundle - Result of fetchIssueBundle.
  * @param {Object} info - Basic info scraped by the content script.

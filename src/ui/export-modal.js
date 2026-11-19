@@ -125,10 +125,11 @@ function appendModalStyles() {
  * permission has not been granted.
  * @param {Object} details - Prompt details.
  * @param {string} details.ticketId - Issue key, used in the copy.
- * @param {Array} details.attachments - Attachments found on the ticket.
+ * @param {Array} details.attachments - Attachments found on the ticket and its sub-tasks.
+ * @param {boolean} [details.includesSubtasks=false] - True when some belong to sub-tasks.
  * @returns {Promise<Object>} {action: "export"|"settings"|"cancel", remember: boolean}.
  */
-export function showAttachmentPrompt({ ticketId, attachments }) {
+export function showAttachmentPrompt({ ticketId, attachments, includesSubtasks = false }) {
   appendModalStyles();
 
   const existing = document.getElementById(MODAL_ID);
@@ -146,7 +147,7 @@ export function showAttachmentPrompt({ ticketId, attachments }) {
     const card = document.createElement("div");
     card.className = "jira-copier-modal-card";
     card.innerHTML = `
-      <h2>${ticketId} has ${describeCount(attachments.length, imageCount)}</h2>
+      <h2>${ticketId} ${includesSubtasks ? "and its sub-tasks have" : "has"} ${describeCount(attachments.length, imageCount)}</h2>
       <p>
         Images and files can be saved next to the exported Markdown and linked by their full path on disk,
         so an AI coding agent can open them. Right now they would be links to Jira that need a login.

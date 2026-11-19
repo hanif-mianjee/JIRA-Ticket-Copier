@@ -1,5 +1,13 @@
 
 import { STATUS_LIST } from "../config/constants.js";
+import {
+  DEFAULT_WEEKLY_FILTER_DAYS,
+  DEFAULT_WEEKLY_FILTER_JQL,
+  buildWeeklyFilterJql,
+  getDateRange,
+  normalizeDays,
+  normalizeJiraSite,
+} from "../popup/weekly-filter.js";
 
 const SAMPLE_DATA = {
   ticketId: "PROJ-1234",
@@ -51,7 +59,8 @@ function setupPreviewListeners() {
   const previewConfigs = [
     { inputId: "ticketInfoFormat", previewId: "ticketInfoPreview" },
     { inputId: "commitFormat", previewId: "commitFormatPreview" },
-    { inputId: "linkFormat", previewId: "linkFormatPreview" }
+    { inputId: "linkFormat", previewId: "linkFormatPreview" },
+    { inputId: "issueListFormat", previewId: "issueListPreview" }
   ];
 
   previewConfigs.forEach(({ inputId, previewId }) => {
@@ -61,6 +70,21 @@ function setupPreviewListeners() {
       updatePreview(inputId, previewId);
     }
   });
+}
+
+function updateWeeklyFilterPreview() {
+  const days = normalizeDays(document.getElementById("weeklyFilterDays").value);
+  const template = document.getElementById("weeklyFilterJql").value.trim();
+  const range = getDateRange(days);
+  document.getElementById("weeklyFilterPreview").textContent =
+    `${range.startDate} → ${range.endDate}\n\n${buildWeeklyFilterJql(template, range)}`;
+}
+
+function setupWeeklyFilterPreview() {
+  ["weeklyFilterDays", "weeklyFilterJql"].forEach((id) => {
+    document.getElementById(id).addEventListener("input", updateWeeklyFilterPreview);
+  });
+  updateWeeklyFilterPreview();
 }
 
 function renderVariables() {
@@ -112,7 +136,15 @@ document.addEventListener("DOMContentLoaded", () => {
   const enableLinkButtonInput = document.getElementById("enableLinkButton");
   const enableListViewInput = document.getElementById("enableListView");
   const enableExportButtonInput = document.getElementById("enableExportButton");
+  const enableSubtaskExportInput = document.getElementById("enableSubtaskExport");
+  const enableExportPathCopyInput = document.getElementById("enableExportPathCopy");
   const enableAttachmentDownloadInput = document.getElementById("enableAttachmentDownload");
+  const enableIssueListCopyInput = document.getElementById("enableIssueListCopy");
+  const issueListFormatInput = document.getElementById("issueListFormat");
+  const enableWeeklyFilterInput = document.getElementById("enableWeeklyFilter");
+  const weeklyFilterDaysInput = document.getElementById("weeklyFilterDays");
+  const weeklyFilterJqlInput = document.getElementById("weeklyFilterJql");
+  const jiraSiteInput = document.getElementById("jiraSite");
   const successMessage = document.getElementById("successMessage");
   const form = document.getElementById("optionsForm");
   const versionSpan = document.getElementById("version");
@@ -169,7 +201,7 @@ document.addEventListener("DOMContentLoaded", () => {
   function loadOptions() {
     if (chrome && chrome.storage && chrome.storage.sync) {
       chrome.storage.sync.get(
-        ["commitFormat", "ticketInfoFormat", "linkFormat", "statusList", "enableTicketInfo", "enableGitButton", "enableLinkButton", "enableListView", "enableExportButton"],
+        ["commitFormat", "ticketInfoFormat", "linkFormat", "statusList", "enableTicketInfo", "enableGitButton", "enableLinkButton", "enableListView", "enableExportButton", "enableSubtaskExport", "enableExportPathCopy", "enableIssueListCopy", "issueListFormat", "enableWeeklyFilter", "weeklyFilterDays", "weeklyFilterJql", "jiraSite"],
         (result) => {
           if (chrome.runtime && chrome.runtime.lastError) {
             console.error("Error loading formats:", chrome.runtime.lastError);
@@ -187,8 +219,17 @@ document.addEventListener("DOMContentLoaded", () => {
           if (enableLinkButtonInput) enableLinkButtonInput.checked = result.enableLinkButton !== false;
           if (enableListViewInput) enableListViewInput.checked = result.enableListView !== false;
           if (enableExportButtonInput) enableExportButtonInput.checked = result.enableExportButton !== false;
+          if (enableSubtaskExportInput) enableSubtaskExportInput.checked = result.enableSubtaskExport !== false;
+          if (enableExportPathCopyInput) enableExportPathCopyInput.checked = result.enableExportPathCopy !== false;
+          if (enableIssueListCopyInput) enableIssueListCopyInput.checked = result.enableIssueListCopy !== false;
+          issueListFormatInput.value = result.issueListFormat || "";
+          if (enableWeeklyFilterInput) enableWeeklyFilterInput.checked = result.enableWeeklyFilter !== false;
+          weeklyFilterDaysInput.value = normalizeDays(result.weeklyFilterDays);
+          weeklyFilterJqlInput.value = result.weeklyFilterJql || DEFAULT_WEEKLY_FILTER_JQL;
+          jiraSiteInput.value = result.jiraSite || "";
 
           setupPreviewListeners();
+          setupWeeklyFilterPreview();
           renderVariables();
           setupCopyButtons();
         }
@@ -196,7 +237,10 @@ document.addEventListener("DOMContentLoaded", () => {
     } else {
       console.error("chrome.storage.sync is not available");
       statusListInput.value = STATUS_LIST.join("\n");
+      weeklyFilterDaysInput.value = DEFAULT_WEEKLY_FILTER_DAYS;
+      weeklyFilterJqlInput.value = DEFAULT_WEEKLY_FILTER_JQL;
       setupPreviewListeners();
+      setupWeeklyFilterPreview();
       renderVariables();
       setupCopyButtons();
     }
@@ -225,9 +269,26 @@ document.addEventListener("DOMContentLoaded", () => {
     const enableLinkButton = enableLinkButtonInput ? enableLinkButtonInput.checked : true;
     const enableListView = enableListViewInput ? enableListViewInput.checked : true;
     const enableExportButton = enableExportButtonInput ? enableExportButtonInput.checked : true;
+    const enableSubtaskExport = enableSubtaskExportInput ? enableSubtaskExportInput.checked : true;
+    const enableExportPathCopy = enableExportPathCopyInput ? enableExportPathCopyInput.checked : true;
+    const enableIssueListCopy = enableIssueListCopyInput ? enableIssueListCopyInput.checked : true;
+    const issueListFormat = issueListFormatInput.value.trim();
+    const enableWeeklyFilter = enableWeeklyFilterInput ? enableWeeklyFilterInput.checked : true;
+    const weeklyFilterDays = normalizeDays(weeklyFilterDaysInput.value);
+    const typedJql = weeklyFilterJqlInput.value.trim();
+    const weeklyFilterJql = typedJql === DEFAULT_WEEKLY_FILTER_JQL ? "" : typedJql;
+    const jiraSite = normalizeJiraSite(jiraSiteInput.value);
+
+    if (jiraSiteInput.value.trim() !== "" && jiraSite === "") {
+      showMessage("Jira site must be an https://…atlassian.net address", false);
+      jiraSiteInput.focus();
+      return;
+    }
+    weeklyFilterDaysInput.value = weeklyFilterDays;
+    jiraSiteInput.value = jiraSite;
 
     if (chrome && chrome.storage && chrome.storage.sync) {
-      chrome.storage.sync.set({ commitFormat, ticketInfoFormat, linkFormat, statusList, enableTicketInfo, enableGitButton, enableLinkButton, enableListView, enableExportButton }, () => {
+      chrome.storage.sync.set({ commitFormat, ticketInfoFormat, linkFormat, statusList, enableTicketInfo, enableGitButton, enableLinkButton, enableListView, enableExportButton, enableSubtaskExport, enableExportPathCopy, enableIssueListCopy, issueListFormat, enableWeeklyFilter, weeklyFilterDays, weeklyFilterJql, jiraSite }, () => {
         if (chrome.runtime && chrome.runtime.lastError) {
           console.error("Error saving formats:", chrome.runtime.lastError);
           showMessage("Error saving settings", false);

@@ -1,5 +1,6 @@
 import { COLORS } from "../ui/styles.js";
 import { getFormat } from "./storage.js";
+import { fetchIssueSummary } from "./jira-api.js";
 import { BUTTON_TEXT, FEEDBACK_TIMING } from "../config/constants.js";
 
 export function formatMessage(format, info) {
@@ -67,6 +68,31 @@ export const mainButtonFeedback = {
   },
 };
 
+/**
+ * Feedback for a text button that is not the main "Copy Info" button. Success
+ * reports how many items were copied.
+ * @param {string} label - The button's resting text.
+ * @returns {Object} {success(btn, count), fail(btn), notfound(btn)}.
+ */
+export function createTextButtonFeedback(label) {
+  const show = (btn, text, color, duration) => {
+    btn.dataset.feedbackActive = "true";
+    btn.textContent = text;
+    btn.style.setProperty("background", color, "important");
+    setTimeout(() => {
+      btn.textContent = label;
+      btn.style.setProperty("background", COLORS.buttonBg, "important");
+      btn.dataset.feedbackActive = "false";
+    }, duration);
+  };
+
+  return {
+    success: (btn, count) => show(btn, count ? `✓ Copied ${count}` : BUTTON_TEXT.copied, COLORS.success, FEEDBACK_TIMING.success),
+    fail: (btn) => show(btn, BUTTON_TEXT.failed, COLORS.error, FEEDBACK_TIMING.error),
+    notfound: (btn) => show(btn, BUTTON_TEXT.noResults, COLORS.error, FEEDBACK_TIMING.error),
+  };
+}
+
 export function createIconButtonFeedback(getIconFn) {
   const setContent = (btn, type) => {
     btn.dataset.feedbackActive = "true";
@@ -111,7 +137,22 @@ export function createListButtonFeedback(getIconFn) {
   return createFeedbackHandler(setContent, resetContent, 1200);
 }
 
-export async function copyTicketInfo(info, statusOverride, btn, feedback) {
+/**
+ * Fill in a title or status the page did not show, from the Jira API. The
+ * board's issue popup, for one, renders no status field the selectors find.
+ * Nothing is fetched when the page already had what is needed.
+ * @param {Object} info - Info scraped from the page.
+ * @param {string[]} needed - Which of "title" and "status" the caller needs.
+ * @returns {Promise<Object>} The info, with anything that could be fetched filled in.
+ */
+export async function fillMissingInfo(info, needed) {
+  if (!info.ticketId || needed.every((field) => info[field])) return info;
+  const fetched = await fetchIssueSummary(info.ticketId);
+  return { ...info, title: info.title || fetched.title, status: info.status || fetched.status };
+}
+
+export async function copyTicketInfo(pageInfo, statusOverride, btn, feedback) {
+  const info = await fillMissingInfo(pageInfo, statusOverride ? ["title"] : ["title", "status"]);
   if (!info.ticketId || !info.title) {
     feedback.fail(btn);
     return;
@@ -133,7 +174,8 @@ export async function copyTicketInfo(info, statusOverride, btn, feedback) {
     .catch(() => feedback.fail(btn));
 }
 
-export async function copyGitMessage(info, btn, feedback) {
+export async function copyGitMessage(pageInfo, btn, feedback) {
+  const info = await fillMissingInfo(pageInfo, ["title"]);
   if (!info.ticketId || !info.title) {
     feedback.notfound(btn);
     return;
@@ -145,7 +187,8 @@ export async function copyGitMessage(info, btn, feedback) {
     .catch(() => feedback.fail(btn));
 }
 
-export async function copyLinkMessage(info, btn, feedback) {
+export async function copyLinkMessage(pageInfo, btn, feedback) {
+  const info = await fillMissingInfo(pageInfo, ["title"]);
   if (!info.ticketId || !info.title) {
     feedback.notfound(btn);
     return;

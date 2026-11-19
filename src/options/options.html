@@ -126,8 +126,39 @@ Review suggestions applied</textarea>
           </div>
           <div class="help-text">
             Download the whole ticket as a Markdown file — description, custom fields, linked and child work
-            items, attachments and every comment. The file is named <code>PROJ-1234_Ticket_title.md</code> and
+            items, attachments and every comment — plus a file for each sub-task. The file is named <code>PROJ-1234_Ticket_title.md</code> and
             saved to your downloads folder, ready to hand to an AI coding agent.
+          </div>
+
+          <div class="sub-setting">
+            <div class="sub-setting-header">
+              <label for="enableSubtaskExport" class="sub-setting-title">Include sub-tasks</label>
+              <label class="toggle-switch">
+                <input id="enableSubtaskExport" type="checkbox" />
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+            <div class="help-text">
+              Also export every sub-task as its own Markdown file, with its own <code>PROJ-1235_files/</code>
+              folder of attachments. The ticket's Child Work Items table links to each sub-task's file, and each
+              sub-task's <code>parent_file</code> links back. Without <strong>Download attachments</strong>,
+              Chrome asks once whether the site may download multiple files — choose Allow.
+            </div>
+          </div>
+
+          <div class="sub-setting">
+            <div class="sub-setting-header">
+              <label for="enableExportPathCopy" class="sub-setting-title">Copy file path after export</label>
+              <label class="toggle-switch">
+                <input id="enableExportPathCopy" type="checkbox" />
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+            <div class="help-text">
+              Put the exported ticket's file path on the clipboard, ready to paste into an AI agent. It is the full
+              path on disk when <strong>Download attachments</strong> is on; otherwise Chrome does not reveal where
+              the file was saved, so the file name is copied.
+            </div>
           </div>
 
           <div class="sub-setting">
@@ -143,6 +174,80 @@ Review suggestions applied</textarea>
               Markdown file, and link to them by their full path on disk. Without this, images and attachments
               are links that need a Jira login, so an AI agent cannot open them.
               Chrome will ask permission to manage your downloads the first time you switch this on.
+            </div>
+          </div>
+        </section>
+
+        <section class="settings-section">
+          <div class="section-header">
+            <h2>Search Results Copy Button</h2>
+            <label class="toggle-switch">
+              <input id="enableIssueListCopy" type="checkbox" />
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+          <div class="help-text">
+            Adds a <strong>Copy list</strong> button to the header of issue search and saved filter pages, next to
+            Share. It copies every result shown on the page, one line each.
+          </div>
+
+          <div class="form-group sub-setting">
+            <label for="issueListFormat" class="form-label">Line Format</label>
+            <input
+              id="issueListFormat"
+              type="text"
+              class="form-input"
+              placeholder="e.g. • {{ticketId}}: {{title}}"
+              aria-describedby="issueListPreview"
+            />
+            <div id="issueListPreview" class="preview-box"></div>
+          </div>
+        </section>
+
+        <section class="settings-section">
+          <div class="section-header">
+            <h2>Weekly Filter</h2>
+            <label class="toggle-switch">
+              <input id="enableWeeklyFilter" type="checkbox" />
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+          <div class="help-text">
+            Click the extension icon in the Chrome toolbar and choose <strong>Weekly filter</strong> to open a
+            Jira search of the work you finished recently, with the dates already filled in.
+          </div>
+
+          <div class="form-group sub-setting">
+            <label for="weeklyFilterDays" class="form-label">Days to include</label>
+            <input
+              id="weeklyFilterDays"
+              type="number"
+              min="1"
+              max="365"
+              step="1"
+              class="form-input"
+              placeholder="7"
+              aria-describedby="weeklyFilterPreview"
+            />
+            <div class="help-text">Counted back from today, today included. 7 covers the same weekday last week up to now.</div>
+          </div>
+
+          <div class="form-group">
+            <label for="weeklyFilterJql" class="form-label">JQL</label>
+            <textarea id="weeklyFilterJql" rows="4" class="form-textarea" aria-describedby="weeklyFilterPreview"></textarea>
+            <div class="help-text">
+              <code>{{startDate}}</code> and <code>{{endDate}}</code> become dates like <code>2026-11-19</code>.
+              Leave empty for the default.
+            </div>
+            <div id="weeklyFilterPreview" class="preview-box preview-multiline"></div>
+          </div>
+
+          <div class="form-group">
+            <label for="jiraSite" class="form-label">Jira site</label>
+            <input id="jiraSite" type="text" class="form-input" placeholder="your-site.atlassian.net" />
+            <div class="help-text">
+              Optional. Used when the current tab is not on Jira; otherwise the filter opens on the site you are
+              looking at.
             </div>
           </div>
         </section>

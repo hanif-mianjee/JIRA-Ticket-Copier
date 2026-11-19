@@ -4,6 +4,7 @@ const DEFAULT_FORMATS = {
   commitFormat: "{{ticketId}}: {{title}}",
   ticketInfoFormat: "{{ticketId}}: {{status}} - {{title}}",
   linkFormat: "{{ticketId}}: {{title}}",
+  issueListFormat: "• {{ticketId}}: {{title}}",
 };
 
 const DEFAULT_SETTINGS = {
@@ -11,7 +12,10 @@ const DEFAULT_SETTINGS = {
   enableGitButton: true,
   enableLinkButton: true,
   enableExportButton: true,
+  enableSubtaskExport: true,
+  enableExportPathCopy: true,
   enableListView: true,
+  enableIssueListCopy: true,
 };
 
 function isStorageAvailable() {

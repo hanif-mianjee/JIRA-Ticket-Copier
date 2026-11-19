@@ -365,7 +365,7 @@ code {
 
 .features-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
   gap: 32px;
 }
 
@@ -396,6 +396,7 @@ code {
 .feature-icon.purple { background: rgba(101, 84, 192, 0.1); color: var(--color-purple); }
 .feature-icon.green { background: rgba(0, 135, 90, 0.1); color: var(--color-success); }
 .feature-icon.teal { background: rgba(66, 82, 110, 0.1); color: #42526E; }
+.feature-icon.orange { background: rgba(255, 139, 0, 0.12); color: #C25100; }
 
 .feature-card h3 {
   font-size: 20px;

@@ -28,6 +28,10 @@ const ISSUE = {
 
 let downloads;
 let blobText;
+let blobs;
+let savedFiles;
+let failDataUrls;
+let copiedText;
 let button;
 let feedback;
 let permissionGranted;
@@ -50,11 +54,16 @@ function installChromeMock() {
           return callback({ opened: true });
         }
         if (message.type === "downloadAssets") {
-          requestedAssets.push(...message.assets.map((asset) => asset.path));
+          const accepted = message.assets.filter((asset) => !(failDataUrls && asset.url.startsWith("data:")));
+          accepted.forEach((asset) => {
+            requestedAssets.push(asset.path);
+            // Markdown arrives as a data URL; keep its text so tests can read it.
+            if (asset.url.startsWith("data:")) savedFiles[asset.path] = decodeURIComponent(asset.url.split(",").slice(1).join(","));
+          });
           return callback({
             granted: permissionGranted,
-            saved: message.assets.map((asset) => ({ path: asset.path, absolutePath: `${DOWNLOAD_DIR}/${asset.path}` })),
-            failed: [],
+            saved: accepted.map((asset) => ({ path: asset.path, absolutePath: `${DOWNLOAD_DIR}/${asset.path}` })),
+            failed: message.assets.filter((asset) => !accepted.includes(asset)).map((asset) => ({ path: asset.path, message: "too long" })),
           });
         }
         return callback(undefined);
@@ -110,6 +119,13 @@ const modalButton = (role) => document.querySelector(`${MODAL} [data-role="${rol
 beforeEach(() => {
   downloads = [];
   blobText = "";
+  blobs = [];
+  savedFiles = {};
+  failDataUrls = false;
+  copiedText = null;
+  Object.assign(navigator, {
+    clipboard: { writeText: jest.fn((text) => { copiedText = text; return Promise.resolve(); }) },
+  });
   requestedAssets = [];
   optionsOpened = false;
   permissionGranted = false;
@@ -120,6 +136,7 @@ beforeEach(() => {
   // back, so the contents are captured as the Blob is built.
   global.Blob = jest.fn(function MockBlob(parts) {
     blobText = parts.join("");
+    blobs.push(blobText);
   });
   URL.createObjectURL = jest.fn(() => "blob:mock");
   URL.revokeObjectURL = jest.fn();
@@ -312,15 +329,16 @@ describe("attachments", () => {
 
     await exportTicketMarkdown({ ...INFO, ticketId: "YO-396" }, button, feedback);
 
-    expect(requestedAssets).toEqual(["YO-396_files/body-shot.png", "YO-396_files/TheYield_Delivery.csv"]);
+    expect(requestedAssets).toEqual(["YO-396_files/body-shot.png", "YO-396_files/TheYield_Delivery.csv", "YO-396_Dates_not_aligned.md"]);
+    const markdown = savedFiles["YO-396_Dates_not_aligned.md"];
     // Absolute, so the file can be read from anywhere without moving the folder.
     // Quoted because a leading slash is not a safe bare YAML scalar.
-    expect(blobText).toContain(`attachments_dir: "${DOWNLOAD_DIR}/YO-396_files"`);
-    expect(blobText).toContain(`![body-shot.png](${DOWNLOAD_DIR}/YO-396_files/body-shot.png)`);
+    expect(markdown).toContain(`attachments_dir: "${DOWNLOAD_DIR}/YO-396_files"`);
+    expect(markdown).toContain(`![body-shot.png](${DOWNLOAD_DIR}/YO-396_files/body-shot.png)`);
     // The underscore is escaped in link text so it cannot start emphasis.
-    expect(blobText).toContain(`[TheYield\\_Delivery.csv](${DOWNLOAD_DIR}/YO-396_files/TheYield_Delivery.csv)`);
+    expect(markdown).toContain(`[TheYield\\_Delivery.csv](${DOWNLOAD_DIR}/YO-396_files/TheYield_Delivery.csv)`);
     // The table links the saved copy and keeps Jira as the source.
-    expect(blobText).toContain("[Jira](https://site/attachment/content/52150)");
+    expect(markdown).toContain("[Jira](https://site/attachment/content/52150)");
     expect(document.querySelector(MODAL)).toBeNull();
   });
 
@@ -331,7 +349,9 @@ describe("attachments", () => {
     await exportTicketMarkdown({ ...INFO, ticketId: "YO-396" }, button, feedback);
 
     expect(document.querySelector(MODAL)).toBeNull();
-    expect(downloads).toHaveLength(1);
+    // Saved through the downloads API, under a fixed name, rather than as a page download.
+    expect(downloads).toEqual([]);
+    expect(savedFiles["YO-396_Dates_not_aligned.md"]).toContain("# YO-396: Dates not aligned");
   });
 
   it("does not prompt when the ticket has no attachments", async () => {
@@ -424,5 +444,179 @@ describe("attachments", () => {
 
     expect(document.querySelector(MODAL)).toBeNull();
     expect(downloads).toEqual(["YO-396_Dates_not_aligned.md"]);
+  });
+});
+
+describe("sub-tasks", () => {
+  const PARENT = {
+    ...ISSUE,
+    fields: {
+      ...ISSUE.fields,
+      subtasks: [
+        { key: "YO-519", fields: { summary: "Write the parser", status: { name: "Done" } } },
+        { key: "YO-520", fields: { summary: "Hidden one", status: { name: "To Do" } } },
+      ],
+    },
+  };
+
+  const SUBTASK = {
+    key: "YO-519",
+    names: {},
+    fields: {
+      summary: "Write the parser",
+      issuetype: { name: "Sub-task" },
+      status: { name: "Done" },
+      parent: { key: "YO-518", fields: { summary: "Parse raw CSV files" } },
+      description: {
+        type: "doc",
+        version: 1,
+        content: [
+          { type: "heading", attrs: { level: 1 }, content: [{ type: "text", text: "Plan" }] },
+          { type: "paragraph", content: [{ type: "text", text: "Sub-task body." }] },
+        ],
+      },
+      attachment: [
+        { id: "61000", filename: "parser.png", size: 2048, mimeType: "image/png", content: "https://site/attachment/content/61000" },
+      ],
+    },
+  };
+
+  const PARENT_FILE = "YO-518_Parse_raw_CSV_files.md";
+  const SUBTASK_FILE = "YO-519_Write_the_parser.md";
+  const withoutAttachments = { ...SUBTASK, fields: { ...SUBTASK.fields, attachment: [] } };
+
+  // Answers per issue key, so the parent and each sub-task get their own payload.
+  function mockJiraSite(issues) {
+    global.fetch = jest.fn((url) => {
+      const href = String(url);
+      const key = decodeURIComponent(href.match(/\/issue\/([^/?]+)/)[1]);
+      if (!issues[key]) return Promise.resolve(jsonResponse({}, 404));
+      if (href.includes("/comment")) return Promise.resolve(jsonResponse({ comments: [], total: 0 }));
+      if (href.includes("/remotelink")) return Promise.resolve(jsonResponse([]));
+      return Promise.resolve(jsonResponse(issues[key]));
+    });
+  }
+
+  const downloaded = (name) => blobs[downloads.indexOf(name)];
+
+  it("saves each sub-task as its own file with its own attachments, linked both ways by absolute path", async () => {
+    permissionGranted = true;
+    mockJiraSite({ "YO-518": PARENT, "YO-519": SUBTASK });
+
+    await exportTicketMarkdown(INFO, button, feedback);
+
+    expect(requestedAssets).toEqual(["YO-519_files/parser.png", PARENT_FILE, SUBTASK_FILE]);
+    // Written through the downloads API, so no page download and no multi-download prompt.
+    expect(downloads).toEqual([]);
+    // The main ticket's path is what lands on the clipboard.
+    expect(copiedText).toBe(`${DOWNLOAD_DIR}/${PARENT_FILE}`);
+
+    const parent = savedFiles[PARENT_FILE];
+    expect(parent).toContain(`| [YO-519](${DOWNLOAD_DIR}/${SUBTASK_FILE}) | Write the parser | Done |`);
+    expect(parent).toContain("| [YO-520](https://site.atlassian.net/browse/YO-520) | Hidden one | To Do |");
+    expect(parent).toMatch(/Sub-task YO-520 could not be exported/);
+    expect(parent).not.toContain("parser.png");
+
+    const subtask = savedFiles[SUBTASK_FILE];
+    expect(subtask).toContain("# YO-519: Write the parser");
+    expect(subtask).toContain(`parent_file: "${DOWNLOAD_DIR}/${PARENT_FILE}"`);
+    expect(subtask).toContain(`attachments_dir: "${DOWNLOAD_DIR}/YO-519_files"`);
+    expect(subtask).toContain(`[parser.png](${DOWNLOAD_DIR}/YO-519_files/parser.png)`);
+    // A standalone document, so its headings start at the normal level.
+    expect(subtask).toContain("## Description");
+    expect(subtask).toContain("### Plan");
+  });
+
+  it("falls back to page downloads, linked relatively, without the downloads permission", async () => {
+    mockJiraSite({ "YO-518": PARENT, "YO-519": withoutAttachments });
+
+    await exportTicketMarkdown(INFO, button, feedback);
+
+    expect(downloads).toEqual([PARENT_FILE, SUBTASK_FILE]);
+    expect(downloaded(PARENT_FILE)).toContain(`| [YO-519](./${SUBTASK_FILE}) | Write the parser | Done |`);
+    expect(downloaded(SUBTASK_FILE)).toContain(`parent_file: "./${PARENT_FILE}"`);
+    expect(button.textContent).toContain("✓");
+  });
+
+  it("falls back to a page download for any file the downloads API refuses", async () => {
+    permissionGranted = true;
+    failDataUrls = true;
+    mockJiraSite({ "YO-518": PARENT, "YO-519": withoutAttachments });
+
+    await exportTicketMarkdown(INFO, button, feedback);
+
+    expect(downloads).toEqual([PARENT_FILE, SUBTASK_FILE]);
+  });
+
+  it("lists sub-task attachments in the prompt and notes the opt-in in the sub-task's file", async () => {
+    mockJiraSite({ "YO-518": PARENT, "YO-519": SUBTASK });
+
+    const pending = exportTicketMarkdown(INFO, button, feedback);
+    await waitFor(() => document.querySelector(MODAL));
+
+    const modal = document.querySelector(MODAL);
+    expect(modal.textContent).toContain("YO-518 and its sub-tasks have 1 image");
+    expect(modal.textContent).toContain("YO-519 / parser.png");
+
+    modalButton("export").click();
+    await pending;
+
+    expect(downloaded(SUBTASK_FILE)).toContain("[parser.png](https://site/attachment/content/61000)");
+    expect(downloaded(SUBTASK_FILE)).toMatch(/Download attachments/);
+    // The parent has nothing of its own to download, so it carries no such note.
+    expect(downloaded(PARENT_FILE)).not.toMatch(/Download attachments/);
+  });
+
+  it("exports only the ticket when sub-tasks are turned off", async () => {
+    storedSettings.enableSubtaskExport = false;
+    mockJiraSite({ "YO-518": PARENT, "YO-519": SUBTASK });
+
+    await exportTicketMarkdown(INFO, button, feedback);
+
+    const requested = global.fetch.mock.calls.map(([url]) => String(url));
+    expect(requested.some((url) => url.includes("YO-519"))).toBe(false);
+    expect(downloads).toEqual([PARENT_FILE]);
+    expect(blobText).toContain("| [YO-519](https://site.atlassian.net/browse/YO-519) | Write the parser | Done |");
+  });
+});
+
+describe("copying the exported file's path", () => {
+  it("copies the absolute path when the downloads API saved the file", async () => {
+    permissionGranted = true;
+    mockJiraFetch();
+
+    await exportTicketMarkdown(INFO, button, feedback);
+
+    expect(copiedText).toBe(`${DOWNLOAD_DIR}/YO-518_Parse_raw_CSV_files.md`);
+    expect(button.textContent).toContain("✓");
+  });
+
+  it("copies the file name when Chrome does not say where the file went", async () => {
+    mockJiraFetch();
+
+    await exportTicketMarkdown(INFO, button, feedback);
+
+    expect(downloads).toEqual(["YO-518_Parse_raw_CSV_files.md"]);
+    expect(copiedText).toBe("YO-518_Parse_raw_CSV_files.md");
+  });
+
+  it("copies nothing when turned off", async () => {
+    storedSettings.enableExportPathCopy = false;
+    mockJiraFetch();
+
+    await exportTicketMarkdown(INFO, button, feedback);
+
+    expect(copiedText).toBeNull();
+    expect(downloads).toHaveLength(1);
+  });
+
+  it("still reports success when the clipboard is unavailable", async () => {
+    navigator.clipboard.writeText = jest.fn(() => Promise.reject(new Error("Document is not focused")));
+    mockJiraFetch();
+
+    await exportTicketMarkdown(INFO, button, feedback);
+
+    expect(downloads).toHaveLength(1);
+    expect(button.textContent).toContain("✓");
   });
 });
